@@ -25,6 +25,7 @@ public class MapGenerator: MonoBehaviour
     public Vector2 offset;
 
     public float meshHeightMultiplier;
+    public AnimationCurve meshCurve;
 
     public bool autoUpdate;
 
@@ -63,7 +64,7 @@ public class MapGenerator: MonoBehaviour
                 display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
                 break;
             case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
                 break;
         }
     }
