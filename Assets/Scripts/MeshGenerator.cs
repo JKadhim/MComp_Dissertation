@@ -2,15 +2,13 @@ using UnityEngine;
 public static class MeshGenerator
 {
 
-    public static MeshData GenerateTerrainMesh(float[,] heightMap)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier)
     {
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
-        float topLeftX = (width - 1) / -2f;
+        
+        float topLeftX = (width - 1) / 2f;
         float topLeftZ = (height - 1) / 2f;
-
-        float halfWidth = (width - 1) / 2f;
-        float halfHeight = (height - 1) / 2f;
 
         MeshData meshData = new MeshData(width, height);
         int vertexIndex = 0;
@@ -20,13 +18,13 @@ public static class MeshGenerator
             for (int x = 0; x < width; x++)
             {
 
-                meshData.vertices[vertexIndex] = new Vector3(x - halfHeight, heightMap[x, y], y - halfHeight);
-                meshData.uvs[vertexIndex] = new Vector2(1f - (float)x / width, 1f - (float)y / height);
+                meshData.vertices[vertexIndex] = new Vector3(topLeftX - x, heightMap[x, y] * heightMultiplier, topLeftZ - y);
+                meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
 
                 if (x < width - 1 && y < height - 1)
                 {
-                    meshData.AddTriangle(vertexIndex, vertexIndex + width, vertexIndex + width + 1);
-                    meshData.AddTriangle(vertexIndex, vertexIndex + width + 1, vertexIndex + 1);
+                    meshData.AddTriangle(vertexIndex, vertexIndex + width + 1, vertexIndex + width);
+                    meshData.AddTriangle(vertexIndex + width + 1, vertexIndex, vertexIndex + 1);
                 }
 
                 vertexIndex++;
@@ -55,9 +53,9 @@ public class MeshData
 
     public void AddTriangle(int a, int b, int c)
     {
-        triangles[triangleIndex] = a;
+        triangles[triangleIndex] = c;
         triangles[triangleIndex + 1] = b;
-        triangles[triangleIndex + 2] = c;
+        triangles[triangleIndex + 2] = a;
         triangleIndex += 3;
     }
 
