@@ -1,7 +1,17 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public class MapGenerator: MonoBehaviour
 {
+    public enum DrawMode
+    {
+        NoiseMap,
+        ColorMap,
+        Mesh
+    }
+
+    public DrawMode drawMode;
+
     public int mapWidth;
     public int mapHeight;
     public float noiseScale;
@@ -16,12 +26,44 @@ public class MapGenerator: MonoBehaviour
 
     public bool autoUpdate;
 
+    public TerrainType[] regions;
+
     public void Generate()
     {
         float[,] map = PerlinNoise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistence, lacunarity, offset);
 
+        Color[] colorMap = new Color[mapWidth * mapHeight];
+
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                float currentHeight = map[x, y];
+                for (int i = 0; i < regions.Length; i++)
+                {
+                    if (currentHeight <= regions[i].height)
+                    {
+                        colorMap[y * mapWidth + x] = regions[i].color;
+                        break;
+                    }
+                }
+            }
+        }
+
         MapDisplay display = FindFirstObjectByType<MapDisplay>();
-        display.DrawNoiseMap(map);
+
+        switch (drawMode)
+        {
+            case DrawMode.NoiseMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
+                break;
+            case DrawMode.ColorMap:
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                break;
+            case DrawMode.Mesh:
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                break;
+        }
     }
 
     private void OnValidate()
@@ -38,10 +80,18 @@ public class MapGenerator: MonoBehaviour
         {
             lacunarity = 1;
         }
-        if (octaves < 0)
+        if (octaves < 1)
         {
-            octaves = 0;
+            octaves = 1;
         }
 
     }
+}
+
+[System.Serializable]
+public struct TerrainType
+{
+    public string name;
+    public float height;
+    public Color color;
 }
