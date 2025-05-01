@@ -7,13 +7,16 @@ public class MapGenerator: MonoBehaviour
     {
         NoiseMap,
         ColorMap,
-        Mesh
+        Mesh,
+        falloffMap
     }
 
     public DrawMode drawMode;
 
-    public int mapWidth;
-    public int mapHeight;
+    static int mapChunkSize = 481;
+
+    [Range(1, 6)]
+    public int lOD;
     public float noiseScale;
 
     public int octaves;
@@ -24,6 +27,13 @@ public class MapGenerator: MonoBehaviour
     public int seed;
     public Vector2 offset;
 
+    public bool useFalloff;
+
+    [Range(1, 10)]
+    public float falloffSteepness;
+    [Range(0.5f, 10f)]
+    public float falloffShift;
+
     public float meshHeightMultiplier;
     public AnimationCurve meshCurve;
 
@@ -31,22 +41,33 @@ public class MapGenerator: MonoBehaviour
 
     public TerrainType[] regions;
 
+    float[,] falloffMap;
+
+    private void Awake()
+    {
+        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
+    }
+
     public void Generate()
     {
-        float[,] map = PerlinNoise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistence, lacunarity, offset);
+        float[,] map = PerlinNoise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
 
-        Color[] colorMap = new Color[mapWidth * mapHeight];
+        Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
-        for (int y = 0; y < mapHeight; y++)
+        for (int y = 0; y < mapChunkSize; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < mapChunkSize; x++)
             {
+                if (useFalloff)
+                {
+                    map[x, y] = Mathf.Clamp01(map[x, y] - falloffMap[x, y]);
+                }
                 float currentHeight = map[x, y];
                 for (int i = 0; i < regions.Length; i++)
                 {
                     if (currentHeight <= regions[i].height)
                     {
-                        colorMap[y * mapWidth + x] = regions[i].color;
+                        colorMap[y * mapChunkSize + x] = regions[i].color;
                         break;
                     }
                 }
@@ -61,24 +82,19 @@ public class MapGenerator: MonoBehaviour
                 display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
                 break;
             case DrawMode.ColorMap:
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
                 break;
             case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD), TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
+                break;
+            case DrawMode.falloffMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift)));
                 break;
         }
     }
 
     private void OnValidate()
     {
-        if (mapWidth < 1)
-        {
-            mapWidth = 1;
-        }
-        if (mapHeight < 1)
-        {
-            mapHeight = 1;
-        }
         if (lacunarity < 1)
         {
             lacunarity = 1;
@@ -88,6 +104,7 @@ public class MapGenerator: MonoBehaviour
             octaves = 1;
         }
 
+        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
     }
 }
 
