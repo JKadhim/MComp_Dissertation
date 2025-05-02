@@ -6,14 +6,25 @@ public class MapGenerator: MonoBehaviour
     public enum DrawMode
     {
         NoiseMap,
-        ColorMap,
-        Mesh
+        Mesh,
+        falloffMap
     }
 
-    public DrawMode drawMode;
+    public enum NoiseType
+    {
+        PerlinNoise,
+        DiamondSquareNoise
+    }
 
-    public int mapWidth;
-    public int mapHeight;
+    float[,] map;
+
+    public DrawMode drawMode;
+    public NoiseType noiseType;
+
+    static int mapChunkSize = 481;
+
+    [Range(1, 6)]
+    public int lOD;
     public float noiseScale;
 
     public int octaves;
@@ -21,35 +32,40 @@ public class MapGenerator: MonoBehaviour
     public float persistence;
     public float lacunarity;
 
+    public float roughness = 2.0f;
+
     public int seed;
     public Vector2 offset;
 
+    public bool useFalloff;
+
+    [Range(1, 10)]
+    public float falloffSteepness;
+    [Range(0.5f, 10f)]
+    public float falloffShift;
+
     public float meshHeightMultiplier;
+    public AnimationCurve meshCurve;
 
     public bool autoUpdate;
 
-    public TerrainType[] regions;
+    float[,] falloffMap;
+
+    private void Awake()
+    {
+        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
+    }
 
     public void Generate()
     {
-        float[,] map = PerlinNoise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistence, lacunarity, offset);
-
-        Color[] colorMap = new Color[mapWidth * mapHeight];
-
-        for (int y = 0; y < mapHeight; y++)
+        switch (noiseType)
         {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                float currentHeight = map[x, y];
-                for (int i = 0; i < regions.Length; i++)
-                {
-                    if (currentHeight <= regions[i].height)
-                    {
-                        colorMap[y * mapWidth + x] = regions[i].color;
-                        break;
-                    }
-                }
-            }
+            case NoiseType.PerlinNoise:
+                map = PerlinNoise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
+                break;
+            case NoiseType.DiamondSquareNoise:
+                map = DiamondSquare.GenerateNoiseMap(roughness, seed);
+                break;
         }
 
         MapDisplay display = FindFirstObjectByType<MapDisplay>();
@@ -59,25 +75,17 @@ public class MapGenerator: MonoBehaviour
             case DrawMode.NoiseMap:
                 display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
                 break;
-            case DrawMode.ColorMap:
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
-                break;
             case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
+                break;
+            case DrawMode.falloffMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift)));
                 break;
         }
     }
 
     private void OnValidate()
     {
-        if (mapWidth < 1)
-        {
-            mapWidth = 1;
-        }
-        if (mapHeight < 1)
-        {
-            mapHeight = 1;
-        }
         if (lacunarity < 1)
         {
             lacunarity = 1;
@@ -87,13 +95,6 @@ public class MapGenerator: MonoBehaviour
             octaves = 1;
         }
 
+        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
     }
-}
-
-[System.Serializable]
-public struct TerrainType
-{
-    public string name;
-    public float height;
-    public Color color;
 }
