@@ -13,7 +13,8 @@ public class MapGenerator: MonoBehaviour
     public enum NoiseType
     {
         PerlinNoise,
-        DiamondSquareNoise
+        DiamondSquareNoise,
+        VoronoiNoise
     }
 
     float[,] map;
@@ -65,6 +66,9 @@ public class MapGenerator: MonoBehaviour
                 break;
             case NoiseType.DiamondSquareNoise:
                 map = DiamondSquare.GenerateNoiseMap(roughness, seed);
+                break;
+            case NoiseType.VoronoiNoise:
+                map = VoronoiNoise.GenerateNoiseMap(seed, mapChunkSize);
                 break;
         }
 
