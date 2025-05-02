@@ -8,8 +8,7 @@ public static class VoronoiNoise
 
         float[,] heightMap = new float[size, size];
 
-        int seedCount = 10;
-        
+        int seedCount = 20;
         Vector2[] seeds = new Vector2[seedCount];
 
         for (int i = 0; i < seedCount; i++)
@@ -28,7 +27,8 @@ public static class VoronoiNoise
                     if (distance < minDistance)
                     {
                         minDistance = distance;
-                        heightMap[x, y] = (1 - (distance / size)) * 0.5f;
+                        float normalizedHeight = 1 - (distance / size);
+                        heightMap[x, y] = 1 - (1 - Mathf.Pow(normalizedHeight, 2f) + 0.4f); // Invert the height values
                     }
                 }
             }
