@@ -14,13 +14,17 @@ public class MapGenerator: MonoBehaviour
     {
         PerlinNoise,
         DiamondSquareNoise,
-        VoronoiNoise
+        VoronoiNoise,
+        CellularNoise
     }
 
     float[,] map;
 
     public DrawMode drawMode;
     public NoiseType noiseType;
+
+    [Range(1, 15)]
+    public int steps;
 
     static int mapChunkSize = 481;
 
@@ -69,6 +73,9 @@ public class MapGenerator: MonoBehaviour
                 break;
             case NoiseType.VoronoiNoise:
                 map = VoronoiNoise.GenerateNoiseMap(seed, mapChunkSize);
+                break;
+            case NoiseType.CellularNoise:
+                map = CellularAutomata.GenerateNoiseMap(mapChunkSize, seed, steps);
                 break;
         }
 
