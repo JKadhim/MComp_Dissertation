@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class CellularAutomata
 {
-    public static float[,] GenerateNoiseMap(int size, int seed, int steps)
+    public static float[,] GenerateNoiseMap(int size, int seed, int steps, int blurPasses)
     {
         float[,] map = new float[size, size];
 
@@ -29,6 +29,12 @@ public static class CellularAutomata
         for (int i = 0; i < steps; i++)
         {
             map = SimulationStep(map, size);
+        }
+
+        // Apply blur to smooth the noise map
+        for (int i = 0; i < blurPasses; i++)
+        {
+            map = ApplyBlur(map, size);
         }
 
         return map;
@@ -97,5 +103,40 @@ public static class CellularAutomata
         }
 
         return count;
+    }
+    private static float[,] ApplyBlur(float[,] map, int size)
+    {
+        float[,] blurredMap = new float[size, size];
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                float sum = 0f;
+                int count = 0;
+
+                // Iterate over the 3x3 grid around the current cell
+                for (int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++)
+                    {
+                        int newX = x + i;
+                        int newY = y + j;
+
+                        // Check if the neighbor is within bounds
+                        if (newX >= 0 && newX < size && newY >= 0 && newY < size)
+                        {
+                            sum += map[newX, newY];
+                            count++;
+                        }
+                    }
+                }
+
+                // Average the values
+                blurredMap[x, y] = sum / count;
+            }
+        }
+
+        return blurredMap;
     }
 }

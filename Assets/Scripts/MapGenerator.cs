@@ -39,6 +39,9 @@ public class MapGenerator: MonoBehaviour
 
     public float roughness = 2.0f;
 
+    [Range(0, 10)]
+    public int blurPasses;
+
     public int seed;
     public Vector2 offset;
 
@@ -75,7 +78,7 @@ public class MapGenerator: MonoBehaviour
                 map = VoronoiNoise.GenerateNoiseMap(seed, mapSize);
                 break;
             case NoiseType.CellularNoise:
-                map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps);
+                map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps, blurPasses);
                 break;
         }
 

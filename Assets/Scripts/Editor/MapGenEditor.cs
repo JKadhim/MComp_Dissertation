@@ -14,6 +14,7 @@ public class MapGenEditor : Editor
     SerializedProperty roughness;
     SerializedProperty steps;
     SerializedProperty seed;
+    SerializedProperty blurPasses;
 
     private void OnEnable()
     {
@@ -28,6 +29,7 @@ public class MapGenEditor : Editor
         roughness = serializedObject.FindProperty("roughness");
         steps = serializedObject.FindProperty("steps");
         seed = serializedObject.FindProperty("seed");
+        blurPasses = serializedObject.FindProperty("blurPasses");
     }
 
     public override void OnInspectorGUI()
@@ -65,6 +67,7 @@ public class MapGenEditor : Editor
 
             case MapGenerator.NoiseType.CellularNoise:
                 EditorGUILayout.PropertyField(steps);
+                EditorGUILayout.PropertyField(blurPasses);
                 break;
         }
 
