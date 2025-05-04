@@ -2,18 +2,17 @@ using UnityEngine;
 
 public static class VoronoiNoise
 {
-    public static float[,] GenerateNoiseMap(int seed, int size)
+    public static float[,] GenerateNoiseMap(int seed, int size, int seedCount)
     {
         System.Random prng = new System.Random(seed);
 
         float[,] heightMap = new float[size, size];
 
-        int seedCount = 20;
         Vector2[] seeds = new Vector2[seedCount];
 
         for (int i = 0; i < seedCount; i++)
         {
-            seeds[i] = new Vector2(Random.Range(0, size), Random.Range(0, size));
+            seeds[i] = new Vector2(prng.Next(0, size), prng.Next(0, size));
         }
 
         for (int x = 0; x < size; x++)
