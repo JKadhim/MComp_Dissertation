@@ -26,7 +26,7 @@ public class MapGenerator: MonoBehaviour
     [Range(1, 15)]
     public int steps;
 
-    static int mapChunkSize = 481;
+    static int mapSize = 481;
 
     [Range(1, 6)]
     public int lOD;
@@ -56,26 +56,26 @@ public class MapGenerator: MonoBehaviour
 
     float[,] falloffMap;
 
-    private void Awake()
-    {
-        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
-    }
+    //private void Awake()
+    //{
+    //    falloffMap = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
+    //}
 
     public void Generate()
     {
         switch (noiseType)
         {
             case NoiseType.PerlinNoise:
-                map = PerlinNoise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
+                map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
                 break;
             case NoiseType.DiamondSquareNoise:
                 map = DiamondSquare.GenerateNoiseMap(roughness, seed);
                 break;
             case NoiseType.VoronoiNoise:
-                map = VoronoiNoise.GenerateNoiseMap(seed, mapChunkSize);
+                map = VoronoiNoise.GenerateNoiseMap(seed, mapSize);
                 break;
             case NoiseType.CellularNoise:
-                map = CellularAutomata.GenerateNoiseMap(mapChunkSize, seed, steps);
+                map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps);
                 break;
         }
 
@@ -90,7 +90,7 @@ public class MapGenerator: MonoBehaviour
                 display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
                 break;
             case DrawMode.falloffMap:
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift)));
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift)));
                 break;
         }
     }
@@ -106,6 +106,6 @@ public class MapGenerator: MonoBehaviour
             octaves = 1;
         }
 
-        falloffMap = MapFalloff.GenerateFalloff(mapChunkSize, falloffSteepness, falloffShift);
+        falloffMap = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
     }
 }
