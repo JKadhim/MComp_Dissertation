@@ -13,7 +13,7 @@ public static class VoronoiNoise
 
         for (int i = 0; i < seedCount; i++)
         {
-            seeds[i] = new Vector2(Random.Range(0, size), Random.Range(0, size));
+            seeds[i] = new Vector2(prng.Next(0, size), prng.Next(0, size));
         }
 
         for (int x = 0; x < size; x++)

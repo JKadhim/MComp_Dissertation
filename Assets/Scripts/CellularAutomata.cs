@@ -6,7 +6,7 @@ public static class CellularAutomata
     public static float[,] GenerateNoiseMap(int size, int seed, int steps)
     {
         float[,] map = new float[size, size];
-        
+
         System.Random prng = new System.Random(seed);
         float aliveChance = 0.4f;
 
@@ -14,7 +14,7 @@ public static class CellularAutomata
         {
             for (int y = 0; y < size; y++)
             {
-                float rand = Random.value;
+                float rand = (float)prng.NextDouble();
                 if (rand <= aliveChance)
                 {
                     map[x, y] = 1.0f;
