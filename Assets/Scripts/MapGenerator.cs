@@ -6,8 +6,7 @@ public class MapGenerator: MonoBehaviour
     public enum DrawMode
     {
         NoiseMap,
-        Mesh,
-        falloffMap
+        Mesh
     }
 
     public enum NoiseType
@@ -15,54 +14,53 @@ public class MapGenerator: MonoBehaviour
         PerlinNoise,
         DiamondSquareNoise,
         VoronoiNoise,
-        CellularNoise
+        CellularNoise,
+        Falloff
     }
-
-    float[,] map;
 
     public DrawMode drawMode;
     public NoiseType noiseType;
 
-    [Range(1, 15)]
-    public int steps;
-
+    //Map generation
+    float[,] map;
+    public int seed;
+    
     static int mapSize = 481;
 
-    [Range(1, 6)]
-    public int lOD;
+    //Perlin noise
     public float noiseScale;
-
+    public Vector2 offset;
     public int octaves;
     [Range(0, 1)]
     public float persistence;
     public float lacunarity;
 
+    //Diamond square
     public float roughness = 2.0f;
 
+    //Voronoi noise
+    [Min(5)]
+    public int seedCount = 10;
+
+    //Cellular automata
+    [Range(1, 15)]
+    public int steps;
     [Range(0, 10)]
     public int blurPasses;
 
-    public int seed;
-    public Vector2 offset;
-
+    //Falloff map
     public bool useFalloff;
-
+    float[,] falloffMap;
     [Range(1, 10)]
     public float falloffSteepness;
     [Range(0.5f, 10f)]
     public float falloffShift;
 
+    //Mesh generation
     public float meshHeightMultiplier;
     public AnimationCurve meshCurve;
-
-    public bool autoUpdate;
-
-    float[,] falloffMap;
-
-    //private void Awake()
-    //{
-    //    falloffMap = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
-    //}
+    [Range(1, 6)]
+    public int lOD;
 
     public void Generate()
     {
@@ -75,10 +73,13 @@ public class MapGenerator: MonoBehaviour
                 map = DiamondSquare.GenerateNoiseMap(roughness, seed);
                 break;
             case NoiseType.VoronoiNoise:
-                map = VoronoiNoise.GenerateNoiseMap(seed, mapSize);
+                map = VoronoiNoise.GenerateNoiseMap(seed, mapSize, seedCount);
                 break;
             case NoiseType.CellularNoise:
                 map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps, blurPasses);
+                break;
+            case NoiseType.Falloff:
+                map = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
                 break;
         }
 
@@ -91,9 +92,6 @@ public class MapGenerator: MonoBehaviour
                 break;
             case DrawMode.Mesh:
                 display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
-                break;
-            case DrawMode.falloffMap:
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift)));
                 break;
         }
     }
