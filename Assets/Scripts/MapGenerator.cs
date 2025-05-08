@@ -1,5 +1,8 @@
 using Unity.Mathematics;
 using UnityEngine;
+using System.Threading;
+using System;
+using System.Collections.Generic;
 
 public class MapGenerator: MonoBehaviour
 {
@@ -57,12 +60,98 @@ public class MapGenerator: MonoBehaviour
     public float falloffShift;
 
     //Mesh generation
-    public float meshHeightMultiplier;
+    public float meshHeightMultiplier = 10;
     public AnimationCurve meshCurve;
     [Range(1, 6)]
     public int lOD;
 
-    public void GenerateMap()
+    Queue<MapThreadData<float[,]>> mapDataQueue = new Queue<MapThreadData<float[,]>>();
+    Queue<MapThreadData<MeshData>> meshDataQueue = new Queue<MapThreadData<MeshData>>();
+
+
+    public void EditorMapGeneration()
+    {
+        map = GenerateMap();
+        MapDisplay display = FindFirstObjectByType<MapDisplay>();
+
+        switch (drawMode)
+        {
+            case DrawMode.NoiseMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
+                break;
+            case DrawMode.Mesh:
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
+                break;
+        }
+    }
+
+    public void RequestMap(Action<float[,]> callback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MapThread(callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    void MapThread(Action<float[,]> callback)
+    {
+        float[,] mapData = GenerateMap();
+        lock (mapDataQueue)
+        {
+            mapDataQueue.Enqueue(new MapThreadData<float[,]>(callback, mapData));
+        }
+
+    }
+
+    public void RequestMesh(Action<MeshData> callback, float[,] mapData)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MeshThread(callback, mapData);
+        };
+        new Thread(threadStart).Start();
+    }
+
+    void MeshThread(Action<MeshData> callback, float[,] mapData)
+    {
+        print(meshHeightMultiplier);
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, lOD);
+        lock (meshDataQueue)
+        {
+            meshDataQueue.Enqueue(new MapThreadData<MeshData>(callback, meshData));
+        }
+    }
+
+    public void Update()
+    {
+        lock (mapDataQueue)
+        {
+            if (mapDataQueue.Count > 0)
+            {
+                for (int i = 0; i < mapDataQueue.Count; i++)
+                {
+                    MapThreadData<float[,]> threadData = mapDataQueue.Dequeue();
+                    threadData.callback(threadData.data);
+                }
+            }
+        }
+
+        lock (meshDataQueue)
+        {
+            if (meshDataQueue.Count > 0)
+            {
+                for (int i = 0; i < meshDataQueue.Count; i++)
+                {
+                    MapThreadData<MeshData> threadData = meshDataQueue.Dequeue();
+                    threadData.callback(threadData.data);
+                }
+            }
+        }
+    }
+
+    float[,] GenerateMap()
     {
         switch (noiseType)
         {
@@ -83,17 +172,7 @@ public class MapGenerator: MonoBehaviour
                 break;
         }
 
-        MapDisplay display = FindFirstObjectByType<MapDisplay>();
-
-        switch (drawMode)
-        {
-            case DrawMode.NoiseMap:
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
-                break;
-            case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
-                break;
-        }
+        return map;
     }
 
     private void OnValidate()
@@ -108,5 +187,17 @@ public class MapGenerator: MonoBehaviour
         }
 
         falloffMap = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
+    }
+
+    struct MapThreadData<T>
+    {
+        public readonly Action<T> callback;
+        public readonly T data;
+
+        public MapThreadData(Action<T> callback, T data)
+        {
+            this.callback = callback;
+            this.data = data;
+        }
     }
 }
