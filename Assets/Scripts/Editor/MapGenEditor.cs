@@ -133,7 +133,7 @@ public class MapGenEditor : Editor
         if (GUILayout.Button("Generate Map"))
         {
             MapGenerator mapGenerator = (MapGenerator)target;
-            mapGenerator.Generate();
+            mapGenerator.GenerateMap();
         }
 
         // Apply changes to the serialized object

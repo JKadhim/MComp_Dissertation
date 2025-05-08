@@ -25,7 +25,7 @@ public class MapGenerator: MonoBehaviour
     float[,] map;
     public int seed;
     
-    static int mapSize = 481;
+    public static int mapSize = 241;
 
     //Perlin noise
     public float noiseScale;
@@ -62,7 +62,7 @@ public class MapGenerator: MonoBehaviour
     [Range(1, 6)]
     public int lOD;
 
-    public void Generate()
+    public void GenerateMap()
     {
         switch (noiseType)
         {
