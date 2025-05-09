@@ -113,6 +113,42 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_00c8714fad8144cba63af909f08ef449_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: fec0e00f46e174842ba1c43c72cdd3fe, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_01a71928b7b340668e7b37066cf2caa4_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 000c473bb75f5cb4491841ff7be9c189, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_04f69c85afaf406f96adeaf5f571b75c_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 1f531e5ecf27ccf47ab8075b440e0453, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_34d5e8838ba34c838a8fb1cac99054b3_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: ee810381188d66b4dba57b0e4e5bc292, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_368b6b3c321042dd8f427f50598c9bbd_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: ee810381188d66b4dba57b0e4e5bc292, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_784cf7c2e31a42f290e134b2119eebe5_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 90209382a7abaf342bb7ae274e732c34, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_8c71d8f8c87a43b79141c87da62e8f77_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: bef6da8e46c7e2243a08e757fcbb232e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_aa74f06a101443e5a139472e6ce4a9fe_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: bef6da8e46c7e2243a08e757fcbb232e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SandTexture:
+        m_Texture: {fileID: 2800000, guid: bef6da8e46c7e2243a08e757fcbb232e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -172,7 +208,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _GrassHeight: 0.12
+    - _GrassHeight: 0.11
     - _HeightTransition: 0
     - _Metallic: 0
     - _Metallic0: 0
@@ -180,7 +216,7 @@ Material:
     - _Metallic2: 0
     - _Metallic3: 0
     - _Mode: 0
-    - _MudHeight: 0.2
+    - _MudHeight: 0.17
     - _NumLayersCount: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -195,14 +231,14 @@ Material:
     - _Smoothness2: 0.5
     - _Smoothness3: 0.5
     - _SmoothnessTextureChannel: 0
-    - _SnowHeight: 0.8
+    - _SnowHeight: 1
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
-    - _StoneHeight: 0.5
+    - _StoneHeight: 0.6
     - _Surface: 0
     - _UVSec: 0
-    - _WaterHeight: 0.05
+    - _WaterHeight: 0.08
     - _WorkflowMode: 0
     - _ZWrite: 1
     m_Colors:
@@ -210,13 +246,13 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DeepWater: {r: 0.10746708, g: 0.11647895, b: 0.3301887, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Grass: {r: 0.25353014, g: 0.3679245, b: 0.16834283, a: 0}
-    - _Mud: {r: 0.3301887, g: 0.29729253, b: 0.26633143, a: 0}
-    - _Rock: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 0}
-    - _Sand: {r: 0.6792453, g: 0.65365344, b: 0.4517622, a: 0}
+    - _Grass: {r: 0.3072451, g: 0.4245283, b: 0.21827163, a: 0}
+    - _Mud: {r: 0.3490566, g: 0.30377802, b: 0.25849947, a: 0}
+    - _Rock: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0}
+    - _Sand: {r: 0.7264151, g: 0.6984124, b: 0.4557227, a: 0}
     - _Snow: {r: 1, g: 1, b: 1, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _Stone: {r: 0.103773594, g: 0.103773594, b: 0.103773594, a: 0}
+    - _Stone: {r: 0.3301887, g: 0.3301887, b: 0.3301887, a: 0}
     - _Water: {r: 0.45759168, g: 0.51974654, b: 0.8584906, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
