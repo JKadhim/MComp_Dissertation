@@ -63,7 +63,7 @@ public class MapGenerator: MonoBehaviour
     public float meshHeightMultiplier = 10;
     public AnimationCurve meshCurve;
     [Range(1, 6)]
-    public int lOD;
+    public int editorLOD;
 
     Queue<MapThreadData<float[,]>> mapDataQueue = new Queue<MapThreadData<float[,]>>();
     Queue<MapThreadData<MeshData>> meshDataQueue = new Queue<MapThreadData<MeshData>>();
@@ -71,7 +71,7 @@ public class MapGenerator: MonoBehaviour
 
     public void EditorMapGeneration()
     {
-        map = GenerateMap();
+        map = GenerateMap(Vector2.zero);
         MapDisplay display = FindFirstObjectByType<MapDisplay>();
 
         switch (drawMode)
@@ -80,24 +80,24 @@ public class MapGenerator: MonoBehaviour
                 display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
                 break;
             case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, lOD));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, editorLOD));
                 break;
         }
     }
 
-    public void RequestMap(Action<float[,]> callback)
+    public void RequestMap(Vector2 centre, Action<float[,]> callback)
     {
         ThreadStart threadStart = delegate
         {
-            MapThread(callback);
+            MapThread(centre, callback);
         };
 
         new Thread(threadStart).Start();
     }
 
-    void MapThread(Action<float[,]> callback)
+    void MapThread(Vector2 centre, Action<float[,]> callback)
     {
-        float[,] mapData = GenerateMap();
+        float[,] mapData = GenerateMap(centre);
         lock (mapDataQueue)
         {
             mapDataQueue.Enqueue(new MapThreadData<float[,]>(callback, mapData));
@@ -105,19 +105,19 @@ public class MapGenerator: MonoBehaviour
 
     }
 
-    public void RequestMesh(Action<MeshData> callback, float[,] mapData)
+    public void RequestMesh(Action<MeshData> callback, float[,] mapData, int levelOfDetail)
     {
         ThreadStart threadStart = delegate
         {
-            MeshThread(callback, mapData);
+            MeshThread(callback, mapData, levelOfDetail);
         };
         new Thread(threadStart).Start();
     }
 
-    void MeshThread(Action<MeshData> callback, float[,] mapData)
+    void MeshThread(Action<MeshData> callback, float[,] mapData, int levelOfDetail)
     {
         print(meshHeightMultiplier);
-        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, lOD);
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, levelOfDetail);
         lock (meshDataQueue)
         {
             meshDataQueue.Enqueue(new MapThreadData<MeshData>(callback, meshData));
@@ -151,12 +151,12 @@ public class MapGenerator: MonoBehaviour
         }
     }
 
-    float[,] GenerateMap()
+    float[,] GenerateMap(Vector2 centre)
     {
         switch (noiseType)
         {
             case NoiseType.PerlinNoise:
-                map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
+                map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, centre + offset);
                 break;
             case NoiseType.DiamondSquareNoise:
                 map = DiamondSquare.GenerateNoiseMap(roughness, seed);

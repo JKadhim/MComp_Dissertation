@@ -125,7 +125,7 @@ public class MapGenEditor : Editor
                 EditorGUILayout.TextField("Mesh Settings", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(meshHeightMultiplier);
                 EditorGUILayout.PropertyField(meshCurve);
-                EditorGUILayout.PropertyField(lOD);
+                //EditorGUILayout.PropertyField(lOD);
                 break;
         }
 
