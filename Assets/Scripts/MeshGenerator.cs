@@ -1,9 +1,11 @@
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public static class MeshGenerator
 {
     public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
     {
+        AnimationCurve newHeightCurve = new AnimationCurve(heightCurve.keys);
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
 
@@ -20,9 +22,11 @@ public static class MeshGenerator
         {
             for (int x = 0; x < width; x += detailIncrement)
             {
-                float heightValue = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+                float heightValue = newHeightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+
                 meshData.vertices[vertexIndex] = new Vector3(topLeftX - x, heightValue, topLeftZ - y);
-                meshData.uvs[vertexIndex] = new Vector2(0, heightValue/heightMultiplier);
+                meshData.uvs[vertexIndex] = new Vector2(0, heightValue / heightMultiplier);
+                
 
                 if (x < width - 1 && y < height - 1)
                 {

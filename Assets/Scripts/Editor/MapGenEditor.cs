@@ -36,6 +36,7 @@ public class MapGenEditor : Editor
     SerializedProperty meshHeightMultiplier;
     SerializedProperty meshCurve;
     SerializedProperty lOD;
+    SerializedProperty normalizeMode;
 
 
     private void OnEnable()
@@ -57,8 +58,8 @@ public class MapGenEditor : Editor
         falloffShift = serializedObject.FindProperty("falloffShift");
         meshHeightMultiplier = serializedObject.FindProperty("meshHeightMultiplier");
         meshCurve = serializedObject.FindProperty("meshCurve");
-        lOD = serializedObject.FindProperty("lOD");
         seedCount = serializedObject.FindProperty("seedCount");
+        normalizeMode = serializedObject.FindProperty("normalizationMode");
     }
 
     public override void OnInspectorGUI()
@@ -125,7 +126,7 @@ public class MapGenEditor : Editor
                 EditorGUILayout.TextField("Mesh Settings", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(meshHeightMultiplier);
                 EditorGUILayout.PropertyField(meshCurve);
-                EditorGUILayout.PropertyField(lOD);
+                EditorGUILayout.PropertyField(normalizeMode);
                 break;
         }
 
@@ -133,7 +134,7 @@ public class MapGenEditor : Editor
         if (GUILayout.Button("Generate Map"))
         {
             MapGenerator mapGenerator = (MapGenerator)target;
-            mapGenerator.Generate();
+            mapGenerator.EditorMapGeneration();
         }
 
         // Apply changes to the serialized object
