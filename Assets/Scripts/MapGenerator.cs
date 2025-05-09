@@ -24,6 +24,8 @@ public class MapGenerator: MonoBehaviour
     public DrawMode drawMode;
     public NoiseType noiseType;
 
+    public PerlinNoise.NormalizationMode normalizationMode;
+
     //Map generation
     float[,] map;
     public int seed;
@@ -156,7 +158,7 @@ public class MapGenerator: MonoBehaviour
         switch (noiseType)
         {
             case NoiseType.PerlinNoise:
-                map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, centre + offset);
+                map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, centre + offset, normalizationMode);
                 break;
             case NoiseType.DiamondSquareNoise:
                 map = DiamondSquare.GenerateNoiseMap(roughness, seed);
