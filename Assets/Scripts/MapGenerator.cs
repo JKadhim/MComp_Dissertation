@@ -118,7 +118,6 @@ public class MapGenerator: MonoBehaviour
 
     void MeshThread(Action<MeshData> callback, float[,] mapData, int levelOfDetail)
     {
-        print(meshHeightMultiplier);
         MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, levelOfDetail);
         lock (meshDataQueue)
         {
