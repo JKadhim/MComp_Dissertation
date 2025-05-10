@@ -4,8 +4,8 @@ public static class PerlinNoise
 {
     public enum NormalizationMode
     {
-        Local,
-        Global
+        Global,
+        Local
     }
 
     public static float[,] GenerateNoiseMap(int size, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, NormalizationMode normalization)
@@ -27,11 +27,6 @@ public static class PerlinNoise
 
             maxHeight += amplitude;
             amplitude *= persistance;
-        }
-
-        if (scale <= 0f)
-        {
-            scale = 0.0001f; // Prevent division by zero
         }
 
         float maxNoiseHeight = float.MinValue;
@@ -80,8 +75,8 @@ public static class PerlinNoise
                 }
                 else
                 {
-                    float normalizedValue = (noiseMap[x, y] + 1) / maxHeight;
-                    noiseMap[x, y] = normalizedValue;
+                    float normalizedValue = (noiseMap[x, y] + 1) / (2f* maxHeight/1.75f);
+                    noiseMap[x, y] = Mathf.Clamp(normalizedValue,0, int.MaxValue);
                 }
             }
         }

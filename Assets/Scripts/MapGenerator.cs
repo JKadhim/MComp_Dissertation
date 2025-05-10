@@ -33,6 +33,7 @@ public class MapGenerator: MonoBehaviour
     public static int mapSize = 241;
 
     //Perlin noise
+    [Min(0.01f)]
     public float noiseScale;
     public Vector2 offset;
     public int octaves;
@@ -176,6 +177,8 @@ public class MapGenerator: MonoBehaviour
         return map;
     }
 
+#if UNITY_EDITOR
+
     private void OnValidate()
     {
         if (lacunarity < 1)
@@ -189,6 +192,8 @@ public class MapGenerator: MonoBehaviour
 
         falloffMap = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);
     }
+
+#endif
 
     struct MapThreadData<T>
     {

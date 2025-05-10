@@ -116,8 +116,7 @@ public class EndlessTerrain : MonoBehaviour
 
             for (int i = 0; i < detailLevels.Length; i++)
             {
-                levelOfDetailMeshes[i] = new LevelOfDetailMesh(detailLevels[i].lOD, UpdateChunk);
-                
+                levelOfDetailMeshes[i] = new LevelOfDetailMesh(detailLevels[i].lOD, UpdateChunk);                
             }
 
             mapGenerator.RequestMap(position, onMapDataReceived);
@@ -140,8 +139,8 @@ public class EndlessTerrain : MonoBehaviour
             {
                 return;
             }
-            float distFromEdge = bounds.SqrDistance(viewerPosition);
-            bool visible = distFromEdge <= maxViewDistance * maxViewDistance;
+            float distFromEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
+            bool visible = distFromEdge <= maxViewDistance;
 
             if (visible) 
             { 
@@ -149,7 +148,7 @@ public class EndlessTerrain : MonoBehaviour
 
                 for (int i = 0; i < detailLevels.Length - 1; i++)
                 {
-                    if (distFromEdge <= detailLevels[i].range)
+                    if (distFromEdge > detailLevels[i].range)
                     {
                         index = i + 1;
                     }
