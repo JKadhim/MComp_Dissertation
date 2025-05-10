@@ -31,6 +31,7 @@ public class MapGenerator: MonoBehaviour
     public int seed;
     
     public static int mapSize = 241;
+    public static int sizeDS = 257; //Diamond square size
 
     //Perlin noise
     [Min(0.01f)]
@@ -163,7 +164,7 @@ public class MapGenerator: MonoBehaviour
                 map = PerlinNoise.GenerateNoiseMap(mapSize, seed, noiseScale, octaves, persistence, lacunarity, centre + offset, normalizationMode);
                 break;
             case NoiseType.DiamondSquareNoise:
-                map = DiamondSquare.GenerateNoiseMap(roughness, seed);
+                map = DiamondSquare.GenerateNoiseMap(sizeDS, roughness, seed);
                 break;
             case NoiseType.VoronoiNoise:
                 map = VoronoiNoise.GenerateNoiseMap(seed, mapSize, seedCount);
