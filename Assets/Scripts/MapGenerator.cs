@@ -69,7 +69,7 @@ public class MapGenerator: MonoBehaviour
     public float meshHeightMultiplier = 10;
     public AnimationCurve meshCurve;
     [Range(1, 6)]
-    public int editorLOD;
+    public int editorLOD = 1;
 
     Queue<MapThreadData<float[,]>> mapDataQueue = new Queue<MapThreadData<float[,]>>();
     Queue<MapThreadData<MeshData>> meshDataQueue = new Queue<MapThreadData<MeshData>>();
@@ -86,7 +86,7 @@ public class MapGenerator: MonoBehaviour
                 display.DrawTexture(TextureGenerator.TextureFromHeightMap(map));
                 break;
             case DrawMode.Mesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, editorLOD));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(map, meshHeightMultiplier, meshCurve, editorLOD, noiseType));
                 break;
         }
     }
@@ -122,7 +122,7 @@ public class MapGenerator: MonoBehaviour
 
     void MeshThread(Action<MeshData> callback, float[,] mapData, int levelOfDetail)
     {
-        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, levelOfDetail);
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData, meshHeightMultiplier, meshCurve, levelOfDetail, noiseType);
         lock (meshDataQueue)
         {
             meshDataQueue.Enqueue(new MapThreadData<MeshData>(callback, meshData));

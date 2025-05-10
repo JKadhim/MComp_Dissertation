@@ -2,7 +2,7 @@ using UnityEngine;
 
 public static class DiamondSquare
 {
-    public static float[,] GenerateNoiseMap(int size, float roughness, int seed, float decayFactor = 0.5f, bool normalize = true)
+    public static float[,] GenerateNoiseMap(int size, float roughness, int seed, float decayFactor = 0.55f, bool normalize = true)
     {
         // Validate size (must be a power of 2 plus 1)
         if ((size - 1 & (size - 2)) != 0)

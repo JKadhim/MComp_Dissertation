@@ -31,7 +31,17 @@ public class EndlessTerrain : MonoBehaviour
     {
         mapGenerator = FindFirstObjectByType<MapGenerator>();
         maxViewDistance = detailLevels[detailLevels.Length - 1].range;
-        chunkSize = MapGenerator.mapSize - 1;
+
+        // Use a different map size for Diamond Square noise
+        if (mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
+        {
+            chunkSize = MapGenerator.sizeDS - 1; // Use Diamond Square-specific size
+        }
+        else
+        {
+            chunkSize = MapGenerator.mapSize - 1; // Default size
+        }
+
         chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
 
         UpdateVisibleChunks();
@@ -139,35 +149,54 @@ public class EndlessTerrain : MonoBehaviour
             {
                 return;
             }
+
             float distFromEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
             bool visible = distFromEdge <= maxViewDistance;
 
-            if (visible) 
-            { 
-                int index = 0;
-
-                for (int i = 0; i < detailLevels.Length - 1; i++)
+            if (visible)
+            {
+                // Check if LOD should be deactivated for the current NoiseType
+                if (mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
                 {
-                    if (distFromEdge > detailLevels[i].range)
+                    // Always use the highest detail level
+                    if (levelOfDetailMeshes[0].recieved)
                     {
-                        index = i + 1;
+                        meshFilter.mesh = levelOfDetailMeshes[0].mesh;
                     }
-                    else
+                    else if (!levelOfDetailMeshes[0].requested)
                     {
-                        break;
+                        levelOfDetailMeshes[0].RequestMesh(mapInfo);
                     }
                 }
-                if (index != priorIndex)
+                else
                 {
-                    LevelOfDetailMesh levelOfDetailMesh = levelOfDetailMeshes[index];
-                    if (levelOfDetailMesh.recieved)
+                    // Standard LOD logic
+                    int index = 0;
+
+                    for (int i = 0; i < detailLevels.Length - 1; i++)
                     {
-                        priorIndex = index;
-                        meshFilter.mesh = levelOfDetailMesh.mesh;
+                        if (distFromEdge > detailLevels[i].range)
+                        {
+                            index = i + 1;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else if (!levelOfDetailMesh.requested)
+
+                    if (index != priorIndex)
                     {
-                        levelOfDetailMesh.RequestMesh(mapInfo);
+                        LevelOfDetailMesh levelOfDetailMesh = levelOfDetailMeshes[index];
+                        if (levelOfDetailMesh.recieved)
+                        {
+                            priorIndex = index;
+                            meshFilter.mesh = levelOfDetailMesh.mesh;
+                        }
+                        else if (!levelOfDetailMesh.requested)
+                        {
+                            levelOfDetailMesh.RequestMesh(mapInfo);
+                        }
                     }
                 }
 
