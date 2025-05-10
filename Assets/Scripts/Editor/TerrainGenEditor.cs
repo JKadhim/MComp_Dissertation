@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [CustomEditor(typeof(TerrainGenerator))]
 public class TerrainGenEditor : Editor
@@ -110,7 +111,7 @@ public class TerrainGenEditor : Editor
 
         TerrainGenerator.NoiseType selectedNoiseType = (TerrainGenerator.NoiseType)noiseType.enumValueIndex;
 
-        if (selectedNoiseType != TerrainGenerator.NoiseType.DiamondSquare)
+        if (selectedNoiseType != TerrainGenerator.NoiseType.FalloffMap)
         {
             EditorGUILayout.PropertyField(randomSeed);
             EditorGUILayout.PropertyField(applyFalloff);
@@ -141,7 +142,7 @@ public class TerrainGenEditor : Editor
 
             case TerrainGenerator.NoiseType.DiamondSquare:
                 EditorGUILayout.LabelField("Diamond Square Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(diamondSquareRoughness);
+                EditorGUILayout.PropertyField(diamondSquareRoughness, new GUIContent("Roughness"));
                 break;
 
             case TerrainGenerator.NoiseType.Voronoi:
@@ -165,8 +166,8 @@ public class TerrainGenEditor : Editor
         if (selectedDrawMode == TerrainGenerator.RenderMode.TerrainMesh)
         {
             EditorGUILayout.LabelField("Mesh Settings", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(terrainHeightMultiplier);
-            EditorGUILayout.PropertyField(terrainHeightCurve);
+            EditorGUILayout.PropertyField(terrainHeightMultiplier, new GUIContent("Height Multiplier"));
+            EditorGUILayout.PropertyField(terrainHeightCurve, new GUIContent("Height Curve"));
             EditorGUILayout.PropertyField(normalizationMode);
         }
     }
