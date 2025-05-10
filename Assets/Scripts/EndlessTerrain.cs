@@ -5,177 +5,187 @@ using UnityEngine.UIElements;
 
 public class EndlessTerrain : MonoBehaviour
 {
-    const float scale = 1f;
+    // Constants
+    const float scale = 1f; // Scale factor for terrain
+    const float updateDistance = 10f; // Distance threshold for updating chunks
+    const float updateDistanceSqr = updateDistance * updateDistance; // Squared distance for optimization
 
+    // Public Fields
     public static float maxViewDistance;
     public LevelOfDetailData[] detailLevels;
-
-    const float updateDistance = 10f;
-    const float updateDistanceSqr = updateDistance * updateDistance;
-
     public Transform viewer;
     public Material mapMaterial;
 
+    // Static Fields
     public static Vector2 viewerPosition;
+    static MapGenerator mapGenerator; 
+
+    // Private Fields
     Vector2 lastViewerPosition;
+    int tileSize;
+    int visibleTiles;
 
-    static MapGenerator mapGenerator;
+    Dictionary<Vector2, TerrainTile> tileDict = new Dictionary<Vector2, TerrainTile>(); // Dictionary to store terrain tiles
+    static List<TerrainTile> priorTilesVisible = new List<TerrainTile>();
 
-    int chunkSize;
-    int chunksVisibleInViewDistance;
-
-    Dictionary<Vector2, TerrainChunk> chunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-    static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
-
+    // Initializes the terrain system by setting up the map generator, calculating tile size, and updating visible chunks.
     void Start()
     {
         mapGenerator = FindFirstObjectByType<MapGenerator>();
         maxViewDistance = detailLevels[detailLevels.Length - 1].range;
 
-        // Use a different map size for Diamond Square noise
-        if (mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
-        {
-            chunkSize = MapGenerator.sizeDS - 1; // Use Diamond Square-specific size
-        }
-        else
-        {
-            chunkSize = MapGenerator.mapSize - 1; // Default size
-        }
+        // Determine tile size based on the noise type
+        tileSize = mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise
+            ? MapGenerator.sizeDS - 1
+            : MapGenerator.mapSize - 1;
 
-        chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
+        // Calculate the number of tiles visible within the view distance
+        visibleTiles = Mathf.RoundToInt(maxViewDistance / tileSize);
 
-        UpdateVisibleChunks();
+        // Update visible tiles at the start
+        UpdateVisibleTiles();
     }
 
+    // Updates the viewer's position and checks if the visible tiles need to be updated.
     void Update()
     {
         var pos = viewer.position / scale;
         viewerPosition = new Vector2(pos.x, pos.z);
+
+        // Update tiles only if the viewer has moved a significant distance
         if ((lastViewerPosition - viewerPosition).sqrMagnitude > updateDistanceSqr)
         {
             lastViewerPosition = viewerPosition;
-            UpdateVisibleChunks();
+            UpdateVisibleTiles();
         }
     }
 
-    void UpdateVisibleChunks()
+    // Updates the visibility of terrain tiles based on the viewer's position.
+    void UpdateVisibleTiles()
     {
-        for (int i = 0; i < terrainChunksVisibleLastUpdate.Count; i++)
+        // Hide all tiles from the last update
+        foreach (var tile in priorTilesVisible)
         {
-            terrainChunksVisibleLastUpdate[i].SetVisible(false);
+            tile.SetVisible(false);
         }
 
-        terrainChunksVisibleLastUpdate.Clear();
+        priorTilesVisible.Clear();
 
-        int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);
-        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
+        // Calculate the current tile coordinates
+        int currentTilePosX = Mathf.RoundToInt(viewerPosition.x / tileSize);
+        int currentTilePosY = Mathf.RoundToInt(viewerPosition.y / tileSize);
 
-        for (int yOffset = -chunksVisibleInViewDistance; yOffset <= chunksVisibleInViewDistance; yOffset++)
+        // Loop through visible chunks and update or create them
+        for (int yOffset = -visibleTiles; yOffset <= visibleTiles; yOffset++)
         {
-            for (int xOffset = -chunksVisibleInViewDistance; xOffset <= chunksVisibleInViewDistance; xOffset++)
+            for (int xOffset = -visibleTiles; xOffset <= visibleTiles; xOffset++)
             {
-                Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-                if (chunkDictionary.ContainsKey(viewedChunkCoord))
+                Vector2 viewedTilePos = new Vector2(currentTilePosX + xOffset, currentTilePosY + yOffset);
+
+                if (tileDict.ContainsKey(viewedTilePos))
                 {
-                    chunkDictionary[viewedChunkCoord].UpdateChunk();                  
+                    // Update existing tile
+                    tileDict[viewedTilePos].UpdateTile();
                 }
                 else
                 {
-                    chunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, transform, mapMaterial));
+                    // Create a new tile if it doesn't exist
+                    tileDict.Add(viewedTilePos, new TerrainTile(viewedTilePos, tileSize, detailLevels, transform, mapMaterial));
                 }
             }
         }
     }
 
-    public class TerrainChunk
+    public class TerrainTile
     {
-        public GameObject meshObject;
-        Vector2 position;
-        Bounds bounds;
+        public GameObject meshObject; // GameObject representing the terrain tile
+        Vector2 position; // Position of the tile
+        Bounds bounds; // Bounds of the tile
 
-        MeshRenderer meshRenderer;
-        MeshFilter meshFilter;
+        MeshRenderer meshRenderer; // Renderer for the tile's mesh
+        MeshFilter meshFilter; // Filter for the tile's mesh
 
-        LevelOfDetailData[] detailLevels;
-        LevelOfDetailMesh[] levelOfDetailMeshes;
+        LevelOfDetailData[] lodDetails; // LOD data for the tile
+        LevelOfDetailMesh[] levelOfDetailMeshes; // LOD meshes for the tile
 
-        float[,] mapInfo;
-        bool mapReceived;
-        int priorIndex = -1;
+        float[,] heightMap; // Heightmap data for the tile
+        bool mapReceived; // Flag to check if map data is received
+        int priorIndex = -1; // Previously used LOD index
 
-
-        public TerrainChunk(Vector2 coord, int size, LevelOfDetailData[] detailLevels, Transform parent, Material material)
+        // Initializes a new terrain tile at the specified coordinates.
+        public TerrainTile(Vector2 position, int size, LevelOfDetailData[] lodDetails, Transform parent, Material material)
         {
-            this.detailLevels = detailLevels;
-            position = coord * size;
-            bounds = new Bounds(position, Vector2.one * size);
-            Vector3 positionV3 = new Vector3(position.x, 0, position.y);
+            this.lodDetails = lodDetails;
+            this.position = position * size;
+            bounds = new Bounds(this.position, Vector2.one * size);
+            Vector3 pos3D = new Vector3(this.position.x, 0, this.position.y);
 
+            // Create and configure the tile's GameObject
             meshObject = new GameObject("Terrain Mesh");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = material;
 
-            meshObject.transform.position = positionV3 * scale;
+            meshObject.transform.position = pos3D * scale;
             meshObject.transform.parent = parent;
             meshObject.transform.localScale = Vector3.one * scale;
 
             SetVisible(false);
 
-            levelOfDetailMeshes = new LevelOfDetailMesh[detailLevels.Length];
-
-            for (int i = 0; i < detailLevels.Length; i++)
+            // Initialize LOD meshes
+            levelOfDetailMeshes = new LevelOfDetailMesh[lodDetails.Length];
+            for (int i = 0; i < lodDetails.Length; i++)
             {
-                levelOfDetailMeshes[i] = new LevelOfDetailMesh(detailLevels[i].lOD, UpdateChunk);                
+                levelOfDetailMeshes[i] = new LevelOfDetailMesh(lodDetails[i].lOD, UpdateTile);
             }
 
-            mapGenerator.RequestMap(position, onMapDataReceived);
+            // Request map data for the tile
+            mapGenerator.RequestMap(this.position, onMapDataReceived);
         }
 
+        // Callback for when map data is received. Generates a texture and updates the tile.
         void onMapDataReceived(float[,] mapInfo)
         {
-            this.mapInfo = mapInfo;
+            this.heightMap = mapInfo;
             mapReceived = true;
 
+            // Generate texture from heightmap and apply it to the material
             Texture2D texture = TextureGenerator.TextureFromHeightMap(mapInfo);
             meshRenderer.material.mainTexture = texture;
 
-            UpdateChunk();
+            UpdateTile();
         }
 
-        public void UpdateChunk()
+        // Updates the tile's visibility and LOD based on the viewer's position.
+        public void UpdateTile()
         {
-            if (!mapReceived)
-            {
-                return;
-            }
+            if (!mapReceived) return;
 
+            // Calculate distance from the viewer to the tile
             float distFromEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
             bool visible = distFromEdge <= maxViewDistance;
 
             if (visible)
             {
-                // Check if LOD should be deactivated for the current NoiseType
                 if (mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
                 {
-                    // Always use the highest detail level
+                    // Always use the highest detail level for Diamond Square noise
                     if (levelOfDetailMeshes[0].recieved)
                     {
                         meshFilter.mesh = levelOfDetailMeshes[0].mesh;
                     }
                     else if (!levelOfDetailMeshes[0].requested)
                     {
-                        levelOfDetailMeshes[0].RequestMesh(mapInfo);
+                        levelOfDetailMeshes[0].RequestMesh(heightMap);
                     }
                 }
                 else
                 {
                     // Standard LOD logic
                     int index = 0;
-
-                    for (int i = 0; i < detailLevels.Length - 1; i++)
+                    for (int i = 0; i < lodDetails.Length - 1; i++)
                     {
-                        if (distFromEdge > detailLevels[i].range)
+                        if (distFromEdge > lodDetails[i].range)
                         {
                             index = i + 1;
                         }
@@ -195,22 +205,24 @@ public class EndlessTerrain : MonoBehaviour
                         }
                         else if (!levelOfDetailMesh.requested)
                         {
-                            levelOfDetailMesh.RequestMesh(mapInfo);
+                            levelOfDetailMesh.RequestMesh(heightMap);
                         }
                     }
                 }
 
-                terrainChunksVisibleLastUpdate.Add(this);
+                priorTilesVisible.Add(this);
             }
 
             SetVisible(visible);
         }
 
+        // Sets the visibility of the tile.
         public void SetVisible(bool visible)
         {
             meshObject.SetActive(visible);
         }
 
+        // Checks if the tile is currently visible.
         public bool IsVisible()
         {
             return meshObject.activeSelf;
@@ -219,19 +231,21 @@ public class EndlessTerrain : MonoBehaviour
 
     class LevelOfDetailMesh
     {
-        public Mesh mesh;
-        public bool requested;
-        public bool recieved;
-        int levelOfDetail;
+        public Mesh mesh; // Mesh for the LOD
+        public bool requested; // Flag to check if mesh data is requested
+        public bool recieved; // Flag to check if mesh data is received
+        int levelOfDetail; // LOD level
 
-        System.Action updateCallback;
+        System.Action updateCallback; // Callback to update the tile
 
+        // Initializes a new LOD mesh with the specified level of detail and update callback.
         public LevelOfDetailMesh(int levelOfDetail, System.Action updateCallback)
         {
             this.levelOfDetail = levelOfDetail;
             this.updateCallback = updateCallback;
         }
 
+        // Callback for when mesh data is received. Updates the mesh and triggers the update callback.
         void onMeshDataReceived(MeshData meshData)
         {
             mesh = meshData.CreateMesh();
@@ -240,6 +254,7 @@ public class EndlessTerrain : MonoBehaviour
             updateCallback();
         }
 
+        // Requests mesh data for the LOD.
         public void RequestMesh(float[,] map)
         {
             requested = true;
@@ -250,7 +265,7 @@ public class EndlessTerrain : MonoBehaviour
     [System.Serializable]
     public struct LevelOfDetailData
     {
-        public int lOD;
-        public float range;
+        public int lOD; // LOD level
+        public float range; // Range for this LOD
     }
 }
