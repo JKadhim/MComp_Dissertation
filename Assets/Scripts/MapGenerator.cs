@@ -129,6 +129,12 @@ public class MapGenerator: MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        GameObject.Find("Plane").SetActive(false);
+        GameObject.Find("Mesh").SetActive(false);
+    }
+
     public void Update()
     {
         lock (mapDataQueue)
