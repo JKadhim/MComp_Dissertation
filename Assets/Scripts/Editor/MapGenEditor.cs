@@ -4,6 +4,9 @@ using UnityEngine;
 [CustomEditor(typeof(MapGenerator))]
 public class MapGenEditor : Editor
 {
+    #region Serialized Properties
+
+    // General properties
     SerializedProperty drawMode;
     SerializedProperty noiseType;
 
@@ -23,6 +26,7 @@ public class MapGenEditor : Editor
     // Cellular automata properties
     SerializedProperty steps;
     SerializedProperty blurPasses;
+    SerializedProperty aliveChance;
 
     // Map generation properties
     SerializedProperty seed;
@@ -38,6 +42,9 @@ public class MapGenEditor : Editor
     SerializedProperty lOD;
     SerializedProperty normalizeMode;
 
+    #endregion
+
+    #region Unity Methods
 
     private void OnEnable()
     {
@@ -60,6 +67,7 @@ public class MapGenEditor : Editor
         meshCurve = serializedObject.FindProperty("meshCurve");
         seedCount = serializedObject.FindProperty("seedCount");
         normalizeMode = serializedObject.FindProperty("normalizationMode");
+        aliveChance = serializedObject.FindProperty("aliveChance");
     }
 
     public override void OnInspectorGUI()
@@ -67,68 +75,9 @@ public class MapGenEditor : Editor
         // Update the serialized object
         serializedObject.Update();
 
-        EditorGUILayout.PropertyField(drawMode);
-
-        // Draw the noiseType dropdown
-        EditorGUILayout.PropertyField(noiseType);
-
-        // Conditionally display fields based on the selected noiseType
-        MapGenerator.NoiseType selectedNoiseType = (MapGenerator.NoiseType)noiseType.enumValueIndex;
-
-        MapGenerator.DrawMode selectedDrawMode = (MapGenerator.DrawMode)drawMode.enumValueIndex;
-
-        if (selectedNoiseType != MapGenerator.NoiseType.Falloff) 
-        {
-            EditorGUILayout.PropertyField(seed);
-            EditorGUILayout.PropertyField(useFalloff);
-        }
-
-        if (useFalloff.boolValue || selectedNoiseType == MapGenerator.NoiseType.Falloff)
-        {
-            EditorGUILayout.TextField("Falloff Settings", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(falloffSteepness);
-            EditorGUILayout.PropertyField(falloffShift);
-        }
-
-        switch (selectedNoiseType)
-        {
-            case MapGenerator.NoiseType.PerlinNoise:
-                EditorGUILayout.TextField("Perlin Noise Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(noiseScale);
-                EditorGUILayout.PropertyField(octaves);
-                EditorGUILayout.PropertyField(persistence);
-                EditorGUILayout.PropertyField(lacunarity);
-                EditorGUILayout.PropertyField(offset);
-                break;
-
-            case MapGenerator.NoiseType.DiamondSquareNoise:
-                EditorGUILayout.TextField("Diamond Square Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(roughness);
-                break;
-
-            case MapGenerator.NoiseType.VoronoiNoise:
-                EditorGUILayout.TextField("Voronoi Noise Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(seedCount);
-                break;
-
-            case MapGenerator.NoiseType.CellularNoise:
-                EditorGUILayout.TextField("Cellular Noise Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(steps);
-                EditorGUILayout.PropertyField(blurPasses);
-                break;
-        }
-
-        switch (selectedDrawMode)
-        {
-            case MapGenerator.DrawMode.NoiseMap:
-                break;
-            case MapGenerator.DrawMode.Mesh:
-                EditorGUILayout.TextField("Mesh Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(meshHeightMultiplier);
-                EditorGUILayout.PropertyField(meshCurve);
-                EditorGUILayout.PropertyField(normalizeMode);
-                break;
-        }
+        DrawGeneralSettings();
+        DrawNoiseSettings();
+        DrawMeshSettings();
 
         // Add a button to generate the map
         if (GUILayout.Button("Generate Map"))
@@ -140,4 +89,78 @@ public class MapGenEditor : Editor
         // Apply changes to the serialized object
         serializedObject.ApplyModifiedProperties();
     }
+
+    #endregion
+
+    #region Custom Methods
+
+    private void DrawGeneralSettings()
+    {
+        EditorGUILayout.PropertyField(drawMode);
+        EditorGUILayout.PropertyField(noiseType);
+
+        MapGenerator.NoiseType selectedNoiseType = (MapGenerator.NoiseType)noiseType.enumValueIndex;
+
+        if (selectedNoiseType != MapGenerator.NoiseType.Falloff)
+        {
+            EditorGUILayout.PropertyField(seed);
+            EditorGUILayout.PropertyField(useFalloff);
+        }
+
+        if (useFalloff.boolValue || selectedNoiseType == MapGenerator.NoiseType.Falloff)
+        {
+            EditorGUILayout.LabelField("Falloff Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(falloffSteepness);
+            EditorGUILayout.PropertyField(falloffShift);
+        }
+    }
+
+    private void DrawNoiseSettings()
+    {
+        MapGenerator.NoiseType selectedNoiseType = (MapGenerator.NoiseType)noiseType.enumValueIndex;
+
+        switch (selectedNoiseType)
+        {
+            case MapGenerator.NoiseType.PerlinNoise:
+                EditorGUILayout.LabelField("Perlin Noise Settings", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(noiseScale);
+                EditorGUILayout.PropertyField(octaves);
+                EditorGUILayout.PropertyField(persistence);
+                EditorGUILayout.PropertyField(lacunarity);
+                EditorGUILayout.PropertyField(offset);
+                break;
+
+            case MapGenerator.NoiseType.DiamondSquareNoise:
+                EditorGUILayout.LabelField("Diamond Square Settings", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(roughness);
+                break;
+
+            case MapGenerator.NoiseType.VoronoiNoise:
+                EditorGUILayout.LabelField("Voronoi Noise Settings", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(seedCount);
+                break;
+
+            case MapGenerator.NoiseType.CellularNoise:
+                EditorGUILayout.LabelField("Cellular Noise Settings", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(aliveChance);
+                EditorGUILayout.PropertyField(steps);
+                EditorGUILayout.PropertyField(blurPasses);
+                break;
+        }
+    }
+
+    private void DrawMeshSettings()
+    {
+        MapGenerator.DrawMode selectedDrawMode = (MapGenerator.DrawMode)drawMode.enumValueIndex;
+
+        if (selectedDrawMode == MapGenerator.DrawMode.Mesh)
+        {
+            EditorGUILayout.LabelField("Mesh Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(meshHeightMultiplier);
+            EditorGUILayout.PropertyField(meshCurve);
+            EditorGUILayout.PropertyField(normalizeMode);
+        }
+    }
+
+    #endregion
 }

@@ -53,6 +53,8 @@ public class MapGenerator: MonoBehaviour
     public int steps;
     [Range(0, 10)]
     public int blurPasses;
+    [Range(0.1f, 0.4f)]
+    public float aliveChance;
 
     //Falloff map
     public bool useFalloff;
@@ -167,7 +169,7 @@ public class MapGenerator: MonoBehaviour
                 map = VoronoiNoise.GenerateNoiseMap(seed, mapSize, seedCount);
                 break;
             case NoiseType.CellularNoise:
-                map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps, blurPasses);
+                map = CellularAutomata.GenerateNoiseMap(mapSize, seed, steps, blurPasses, aliveChance);
                 break;
             case NoiseType.Falloff:
                 map = MapFalloff.GenerateFalloff(mapSize, falloffSteepness, falloffShift);

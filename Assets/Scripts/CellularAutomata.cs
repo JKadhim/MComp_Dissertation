@@ -3,35 +3,32 @@ using UnityEngine;
 
 public static class CellularAutomata
 {
-    public static float[,] GenerateNoiseMap(int size, int seed, int steps, int blurPasses)
+    // Generates a noise map using cellular automata
+    public static float[,] GenerateNoiseMap(int size, int seed, int steps, int blurPasses, float aliveChance)
     {
         float[,] map = new float[size, size];
-
         System.Random prng = new System.Random(seed);
-        float aliveChance = 0.4f;
 
+        // Initialize the map with random values based on the aliveChance
         for (int x = 0; x < size; x++)
         {
             for (int y = 0; y < size; y++)
             {
                 float rand = (float)prng.NextDouble();
-                if (rand <= aliveChance)
-                {
-                    map[x, y] = 1.0f;
-                }
-                else
-                {
-                    map[x, y] = 0.0f;
-                }
+                map[x, y] = rand <= aliveChance ? 1.0f : 0.0f;
             }
         }
 
+        // Precompute neighbor counts for the initial map
+        int[,] neighborCounts = PrecomputeAliveNeighbors(map, size);
+
+        // Perform the specified number of simulation steps
         for (int i = 0; i < steps; i++)
         {
-            map = SimulationStep(map, size);
+            map = SimulationStep(map, neighborCounts, size);
         }
 
-        // Apply blur to smooth the noise map
+        // Apply blur passes to smooth the noise map
         for (int i = 0; i < blurPasses; i++)
         {
             map = ApplyBlur(map, size);
@@ -40,7 +37,8 @@ public static class CellularAutomata
         return map;
     }
 
-    private static float[,] SimulationStep(float[,] map, int size)
+    // Performs a single simulation step based on cellular automata rules
+    private static float[,] SimulationStep(float[,] map, int[,] neighborCounts, int size)
     {
         float[,] newMap = new float[size, size];
 
@@ -48,12 +46,16 @@ public static class CellularAutomata
         {
             for (int y = 0; y < size; y++)
             {
-                int neighbours = CountAliveNeighbours(map, x, y);
-                if (map[x, y] == 1.0f)
+                int neighbors = neighborCounts[x, y];
+                bool isAlive = map[x, y] == 1.0f;
+
+                // Apply survival and birth rules
+                if (isAlive)
                 {
-                    if (neighbours < 4)
+                    if (neighbors < 3)
                     {
                         newMap[x, y] = 0.0f; // Cell dies
+                        UpdateNeighborCounts(neighborCounts, x, y, size, false);
                     }
                     else
                     {
@@ -62,9 +64,10 @@ public static class CellularAutomata
                 }
                 else
                 {
-                    if (neighbours >= 4)
+                    if (neighbors >= 4)
                     {
                         newMap[x, y] = 1.0f; // Cell becomes alive
+                        UpdateNeighborCounts(neighborCounts, x, y, size, true);
                     }
                     else
                     {
@@ -73,49 +76,19 @@ public static class CellularAutomata
                 }
             }
         }
+
         return newMap;
     }
 
-    private static int CountAliveNeighbours(float[,] map, int x, int y) 
+    // Precomputes the number of alive neighbors for each cell in the map
+    private static int[,] PrecomputeAliveNeighbors(float[,] map, int size)
     {
-        int count = 0;
-
-        for (int i = -1; i <= 1; i++)
-        {
-            for (int j = -1; j <= 1; j++)
-            {
-                int newX = x + i;
-                int newY = y + j;
-                
-                if (i == 0 && j == 0) 
-                {
-                    continue;
-                }
-                else if (newX < 0 || newX >= map.GetLength(0) || newY < 0 || newY >= map.GetLength(1))
-                {
-                    count++;
-                }
-                else if (map[newX, newY] == 1.0f)
-                {
-                    count++;
-                }
-            }
-        }
-
-        return count;
-    }
-    private static float[,] ApplyBlur(float[,] map, int size)
-    {
-        float[,] blurredMap = new float[size, size];
+        int[,] neighborCounts = new int[size, size];
 
         for (int x = 0; x < size; x++)
         {
             for (int y = 0; y < size; y++)
             {
-                float sum = 0f;
-                int count = 0;
-
-                // Iterate over the 3x3 grid around the current cell
                 for (int i = -1; i <= 1; i++)
                 {
                     for (int j = -1; j <= 1; j++)
@@ -123,16 +96,86 @@ public static class CellularAutomata
                         int newX = x + i;
                         int newY = y + j;
 
-                        // Check if the neighbor is within bounds
+                        if (i == 0 && j == 0) continue; // Skip the current cell
                         if (newX >= 0 && newX < size && newY >= 0 && newY < size)
                         {
-                            sum += map[newX, newY];
-                            count++;
+                            neighborCounts[newX, newY] += (map[x, y] == 1.0f) ? 1 : 0;
                         }
                     }
                 }
+            }
+        }
 
-                // Average the values
+        return neighborCounts;
+    }
+
+    // Updates the neighbor counts when a cell changes state
+    private static void UpdateNeighborCounts(int[,] neighborCounts, int x, int y, int size, bool isAlive)
+    {
+        int delta = isAlive ? 1 : -1;
+
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                int newX = x + i;
+                int newY = y + j;
+
+                if (i == 0 && j == 0) continue; // Skip the current cell
+                if (newX >= 0 && newX < size && newY >= 0 && newY < size)
+                {
+                    neighborCounts[newX, newY] += delta;
+                }
+            }
+        }
+    }
+
+    // Applies a blur effect to the map to smooth it
+    private static float[,] ApplyBlur(float[,] map, int size)
+    {
+        float[,] tempMap = new float[size, size];
+        float[,] blurredMap = new float[size, size];
+
+        // Horizontal blur
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                float sum = 0f;
+                int count = 0;
+
+                for (int i = -1; i <= 1; i++)
+                {
+                    int newY = y + i;
+                    if (newY >= 0 && newY < size)
+                    {
+                        sum += map[x, newY];
+                        count++;
+                    }
+                }
+
+                tempMap[x, y] = sum / count;
+            }
+        }
+
+        // Vertical blur
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                float sum = 0f;
+                int count = 0;
+
+                for (int i = -1; i <= 1; i++)
+                {
+                    int newX = x + i;
+                    if (newX >= 0 && newX < size)
+                    {
+                        sum += tempMap[newX, y];
+                        count++;
+                    }
+                }
+
                 blurredMap[x, y] = sum / count;
             }
         }
