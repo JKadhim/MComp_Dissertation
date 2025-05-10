@@ -6,6 +6,7 @@ public static class MapFalloff
     {
         float[,] falloffMap = new float[size, size];
 
+        // Iterate through each coordinate in the map
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
@@ -17,16 +18,19 @@ public static class MapFalloff
                 // Calculate the maximum distance from the center
                 float value = Mathf.Max(Mathf.Abs(normalizedX), Mathf.Abs(normalizedY));
 
-                // Apply the falloff function
-                falloffMap[x, y] = FalloffFunction(value, steepness, shift);
+                // Apply the falloff function to determine the falloff value
+                falloffMap[x, y] = CalculateFalloff(value, steepness, shift);
             }
         }
 
         return falloffMap;
     }
 
-    private static float FalloffFunction(float value, float steepness, float shift)
+    private static float CalculateFalloff(float value, float steepness, float shift)
     {
-        return Mathf.Pow(value, steepness) / (Mathf.Pow(value, steepness) + Mathf.Pow(shift - shift * value, steepness));
+        // Custom falloff function using a power-based formula
+        float powerValue = Mathf.Pow(value, steepness);
+        float denominator = powerValue + Mathf.Pow(shift - shift * value, steepness);
+        return powerValue / denominator;
     }
 }
