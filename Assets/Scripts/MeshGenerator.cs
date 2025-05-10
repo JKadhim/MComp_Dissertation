@@ -3,14 +3,14 @@ using UnityEngine;
 
 public static class MeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, MapGenerator.NoiseType noiseType)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, TerrainGenerator.NoiseType noiseType)
     {
         AnimationCurve newHeightCurve = new AnimationCurve(heightCurve.keys);
 
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
 
-        if (noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
+        if (noiseType == TerrainGenerator.NoiseType.DiamondSquare)
         {
             width = heightMap.GetLength(0) - 1;
             height = heightMap.GetLength(1) - 1;
@@ -20,7 +20,7 @@ public static class MeshGenerator
         float topLeftZ = (height - 1) / 2f;
 
         // Prevent LOD if noise type is "diamond square"
-        int detailIncrement = (noiseType == MapGenerator.NoiseType.DiamondSquareNoise) ? 1 : (levelOfDetail == 0 ? 1 : levelOfDetail * 2);
+        int detailIncrement = (noiseType == TerrainGenerator.NoiseType.DiamondSquare) ? 1 : (levelOfDetail == 0 ? 1 : levelOfDetail * 2);
         int verticesPerLine = (width - 1) / detailIncrement + 1;
 
         MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);

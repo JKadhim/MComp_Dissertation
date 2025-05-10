@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Handles the display of map data, including textures and meshes.
-public class MapDisplay : MonoBehaviour
+public class NoiseDisplay : MonoBehaviour
 {
     // Renderer for displaying textures on a plane.
     public Renderer textureRender;
@@ -16,6 +16,12 @@ public class MapDisplay : MonoBehaviour
         if (texture == null)
         {
             Debug.LogWarning("DrawTexture called with a null texture.");
+            return;
+        }
+
+        if (textureRender == null)
+        {
+            Debug.LogWarning("Texture renderer is not assigned.");
             return;
         }
 

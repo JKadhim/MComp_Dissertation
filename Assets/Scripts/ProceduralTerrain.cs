@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
-public class EndlessTerrain : MonoBehaviour
+public class ProceduralTerrain : MonoBehaviour
 {
     // Constants
     const float scale = 1f; // Scale factor for terrain
@@ -18,7 +18,7 @@ public class EndlessTerrain : MonoBehaviour
 
     // Static Fields
     public static Vector2 viewerPosition;
-    static MapGenerator mapGenerator; 
+    static TerrainGenerator terrainGenerator; 
 
     // Private Fields
     Vector2 lastViewerPosition;
@@ -31,13 +31,13 @@ public class EndlessTerrain : MonoBehaviour
     // Initializes the terrain system by setting up the map generator, calculating tile size, and updating visible chunks.
     void Start()
     {
-        mapGenerator = FindFirstObjectByType<MapGenerator>();
+        terrainGenerator = FindFirstObjectByType<TerrainGenerator>();
         maxViewDistance = detailLevels[detailLevels.Length - 1].range;
 
         // Determine tile size based on the noise type
-        tileSize = mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise
-            ? MapGenerator.sizeDS - 1
-            : MapGenerator.mapSize - 1;
+        tileSize = terrainGenerator.noiseType == TerrainGenerator.NoiseType.DiamondSquare
+            ? TerrainGenerator.diamondSquareSize - 1
+            : TerrainGenerator.terrainSize - 1;
 
         // Calculate the number of tiles visible within the view distance
         visibleTiles = Mathf.RoundToInt(maxViewDistance / tileSize);
@@ -140,7 +140,7 @@ public class EndlessTerrain : MonoBehaviour
             }
 
             // Request map data for the tile
-            mapGenerator.RequestMap(this.position, onMapDataReceived);
+            terrainGenerator.RequestTerrain(this.position, onMapDataReceived);
         }
 
         // Callback for when map data is received. Generates a texture and updates the tile.
@@ -167,7 +167,7 @@ public class EndlessTerrain : MonoBehaviour
 
             if (visible)
             {
-                if (mapGenerator.noiseType == MapGenerator.NoiseType.DiamondSquareNoise)
+                if (terrainGenerator.noiseType == TerrainGenerator.NoiseType.DiamondSquare)
                 {
                     // Always use the highest detail level for Diamond Square noise
                     if (levelOfDetailMeshes[0].recieved)
@@ -258,7 +258,7 @@ public class EndlessTerrain : MonoBehaviour
         public void RequestMesh(float[,] map)
         {
             requested = true;
-            mapGenerator.RequestMesh(onMeshDataReceived, map, levelOfDetail);
+            terrainGenerator.RequestMesh(onMeshDataReceived, map, levelOfDetail);
         }
     }
 
