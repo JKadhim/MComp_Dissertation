@@ -231,7 +231,7 @@ public class ProceduralTerrain : MonoBehaviour
 
     class LevelOfDetailMesh
     {
-        public Mesh mesh; // Mesh for the LOD
+        public UnityEngine.Mesh mesh; // Mesh for the LOD
         public bool requested; // Flag to check if mesh data is requested
         public bool recieved; // Flag to check if mesh data is received
         int levelOfDetail; // LOD level
@@ -246,7 +246,7 @@ public class ProceduralTerrain : MonoBehaviour
         }
 
         // Callback for when mesh data is received. Updates the mesh and triggers the update callback.
-        void onMeshDataReceived(MeshData meshData)
+        void onMeshDataReceived(Mesh meshData)
         {
             mesh = meshData.CreateMesh();
             recieved = true;

@@ -37,9 +37,11 @@ public class TerrainGenerator : MonoBehaviour
     [Min(0.01f)]
     public float perlinScale;
     public Vector2 perlinOffset;
+    [Min(1)]
     public int perlinOctaves;
     [Range(0, 1)]
     public float perlinPersistence;
+    [Min(1)]
     public float perlinLacunarity;
 
     // Diamond square parameters
@@ -72,65 +74,7 @@ public class TerrainGenerator : MonoBehaviour
     public int editorLevelOfDetail = 1;
 
     Queue<ThreadedData<float[,]>> terrainDataQueue = new Queue<ThreadedData<float[,]>>();
-    Queue<ThreadedData<MeshData>> meshDataQueue = new Queue<ThreadedData<MeshData>>();
-
-    // Generates the terrain in the Unity Editor based on the selected render mode.
-    public void GenerateTerrainInEditor()
-    {
-        terrainMap = GenerateTerrain(Vector2.zero);
-        NoiseDisplay display = FindFirstObjectByType<NoiseDisplay>();
-
-        switch (renderMode)
-        {
-            case RenderMode.HeightMap:
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(terrainMap));
-                break;
-            case RenderMode.TerrainMesh:
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(terrainMap, terrainHeightMultiplier, terrainHeightCurve, editorLevelOfDetail, noiseType));
-                break;
-        }
-    }
-
-    // Requests terrain generation on a separate thread and invokes the callback when done.
-    public void RequestTerrain(Vector2 center, Action<float[,]> callback)
-    {
-        ThreadStart threadStart = delegate
-        {
-            TerrainThread(center, callback);
-        };
-
-        new Thread(threadStart).Start();
-    }
-
-    // Generates the terrain data on a separate thread and enqueues the result.
-    void TerrainThread(Vector2 center, Action<float[,]> callback)
-    {
-        float[,] terrainData = GenerateTerrain(center);
-        lock (terrainDataQueue)
-        {
-            terrainDataQueue.Enqueue(new ThreadedData<float[,]>(callback, terrainData));
-        }
-    }
-
-    // Requests mesh generation on a separate thread and invokes the callback when done.
-    public void RequestMesh(Action<MeshData> callback, float[,] terrainData, int levelOfDetail)
-    {
-        ThreadStart threadStart = delegate
-        {
-            MeshThread(callback, terrainData, levelOfDetail);
-        };
-        new Thread(threadStart).Start();
-    }
-
-    // Generates the mesh data on a separate thread and enqueues the result.
-    void MeshThread(Action<MeshData> callback, float[,] terrainData, int levelOfDetail)
-    {
-        MeshData meshData = MeshGenerator.GenerateTerrainMesh(terrainData, terrainHeightMultiplier, terrainHeightCurve, levelOfDetail, noiseType);
-        lock (meshDataQueue)
-        {
-            meshDataQueue.Enqueue(new ThreadedData<MeshData>(callback, meshData));
-        }
-    }
+    Queue<ThreadedData<Mesh>> meshDataQueue = new Queue<ThreadedData<Mesh>>();
 
     // Initializes the scene by deactivating the "NoisePlane" and "EditorMesh" GameObjects if they exist.
     private void Start()
@@ -171,34 +115,6 @@ public class TerrainGenerator : MonoBehaviour
         }
     }
 
-    // Processes the queued terrain and mesh data callbacks on the main thread.
-    public void Update()
-    {
-        lock (terrainDataQueue)
-        {
-            if (terrainDataQueue.Count > 0)
-            {
-                for (int i = 0; i < terrainDataQueue.Count; i++)
-                {
-                    ThreadedData<float[,]> threadData = terrainDataQueue.Dequeue();
-                    threadData.callback(threadData.data);
-                }
-            }
-        }
-
-        lock (meshDataQueue)
-        {
-            if (meshDataQueue.Count > 0)
-            {
-                for (int i = 0; i < meshDataQueue.Count; i++)
-                {
-                    ThreadedData<MeshData> threadData = meshDataQueue.Dequeue();
-                    threadData.callback(threadData.data);
-                }
-            }
-        }
-    }
-
     // Generates the terrain based on the selected noise algorithm and parameters.
     float[,] GenerateTerrain(Vector2 center)
     {
@@ -224,20 +140,97 @@ public class TerrainGenerator : MonoBehaviour
         return terrainMap;
     }
 
+    // Generates the terrain in the Unity Editor based on the selected render mode.
+    public void GenerateTerrainInEditor()
+    {
+        terrainMap = GenerateTerrain(Vector2.zero);
+        NoiseDisplay display = FindFirstObjectByType<NoiseDisplay>();
+
+        switch (renderMode)
+        {
+            case RenderMode.HeightMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(terrainMap));
+                break;
+            case RenderMode.TerrainMesh:
+                display.DrawMesh(TerrainMeshGenerator.GenerateTerrainMesh(terrainMap, terrainHeightMultiplier, terrainHeightCurve, editorLevelOfDetail, noiseType));
+                break;
+        }
+    }
+
+    // Requests terrain generation on a separate thread and invokes the callback when done.
+    public void RequestTerrain(Vector2 center, Action<float[,]> callback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            TerrainThread(center, callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    // Generates the terrain data on a separate thread and enqueues the result.
+    void TerrainThread(Vector2 center, Action<float[,]> callback)
+    {
+        float[,] terrainData = GenerateTerrain(center);
+        lock (terrainDataQueue)
+        {
+            terrainDataQueue.Enqueue(new ThreadedData<float[,]>(callback, terrainData));
+        }
+    }
+
+    // Requests mesh generation on a separate thread and invokes the callback when done.
+    public void RequestMesh(Action<Mesh> callback, float[,] terrainData, int levelOfDetail)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MeshThread(callback, terrainData, levelOfDetail);
+        };
+        new Thread(threadStart).Start();
+    }
+
+    // Generates the mesh data on a separate thread and enqueues the result.
+    void MeshThread(Action<Mesh> callback, float[,] terrainData, int levelOfDetail)
+    {
+        Mesh meshData = TerrainMeshGenerator.GenerateTerrainMesh(terrainData, terrainHeightMultiplier, terrainHeightCurve, levelOfDetail, noiseType);
+        lock (meshDataQueue)
+        {
+            meshDataQueue.Enqueue(new ThreadedData<Mesh>(callback, meshData));
+        }
+    }
+
+    // Processes the queued terrain and mesh data callbacks on the main thread.
+    public void Update()
+    {
+        lock (terrainDataQueue)
+        {
+            if (terrainDataQueue.Count > 0)
+            {
+                for (int i = 0; i < terrainDataQueue.Count; i++)
+                {
+                    ThreadedData<float[,]> threadData = terrainDataQueue.Dequeue();
+                    threadData.callback(threadData.data);
+                }
+            }
+        }
+
+        lock (meshDataQueue)
+        {
+            if (meshDataQueue.Count > 0)
+            {
+                for (int i = 0; i < meshDataQueue.Count; i++)
+                {
+                    ThreadedData<Mesh> threadData = meshDataQueue.Dequeue();
+                    threadData.callback(threadData.data);
+                }
+            }
+        }
+    }
+
 #if UNITY_EDITOR
 
-    // Validates and clamps certain parameters in the Unity Editor.
+    //pre-generates the falloff map in the editor
     private void OnValidate()
     {
-        if (perlinLacunarity < 1)
-        {
-            perlinLacunarity = 1;
-        }
-        if (perlinOctaves < 1)
-        {
-            perlinOctaves = 1;
-        }
-
         falloffMap = MapFalloff.GenerateFalloff(terrainSize, falloffSteepness, falloffShift);
     }
 

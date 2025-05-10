@@ -31,7 +31,7 @@ public class NoiseDisplay : MonoBehaviour
     }
 
     // Displays a mesh using the provided mesh data.
-    public void DrawMesh(MeshData meshData)
+    public void DrawMesh(Mesh meshData)
     {
         if (meshData == null)
         {
