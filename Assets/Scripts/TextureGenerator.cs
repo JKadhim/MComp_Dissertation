@@ -2,34 +2,41 @@ using UnityEngine;
 
 public static class TextureGenerator
 {
-    public static Texture2D TextureFromColorMap(Color[] colorMap, int width, int height)
+    // Creates a texture from a given color map.
+    public static Texture2D TextureFromColorMap(Color[] pixelColors, int textureWidth, int textureHeight)
     {
-        Texture2D texture = new Texture2D(width, height);
+        Texture2D generatedTexture = new Texture2D(textureWidth, textureHeight);
 
-        texture.filterMode = FilterMode.Point;
-        texture.wrapMode = TextureWrapMode.Clamp;
+        // Set texture properties for better control over rendering.
+        generatedTexture.filterMode = FilterMode.Point;
+        generatedTexture.wrapMode = TextureWrapMode.Clamp;
 
-        texture.SetPixels(colorMap);
-        texture.Apply();
-        return texture;
+        // Apply the color map to the texture.
+        generatedTexture.SetPixels(pixelColors);
+        generatedTexture.Apply();
+        return generatedTexture;
     }
 
-    public static Texture2D TextureFromHeightMap(float[,] heightMap)
+    // Creates a texture from a height map by converting height values to grayscale colors.
+    public static Texture2D TextureFromHeightMap(float[,] elevationMap)
     {
-        int width = heightMap.GetLength(0);
-        int height = heightMap.GetLength(1);
+        int mapWidth = elevationMap.GetLength(0);
+        int mapHeight = elevationMap.GetLength(1);
 
-        Color[] colorMap = new Color[width * height];
+        Color[] grayscaleColors = new Color[mapWidth * mapHeight];
 
-        for (int y = 0; y < height; y++)
+        // Map height values to grayscale colors.
+        for (int row = 0; row < mapHeight; row++)
         {
-            int rowOffset = y * width;
-            for (int x = 0; x < width; x++)
+            int rowOffset = row * mapWidth;
+            for (int col = 0; col < mapWidth; col++)
             {
-                colorMap[rowOffset + x] = Color.Lerp(Color.black, Color.white, heightMap[x, y]);
+                float normalizedHeight = elevationMap[col, row];
+                grayscaleColors[rowOffset + col] = Color.Lerp(Color.black, Color.white, normalizedHeight);
             }
         }
 
-        return TextureFromColorMap(colorMap, width, height);
+        // Use the color map to generate the texture.
+        return TextureFromColorMap(grayscaleColors, mapWidth, mapHeight);
     }
 }
