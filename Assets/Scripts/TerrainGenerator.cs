@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Threading;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class TerrainGenerator : MonoBehaviour
 {
@@ -76,6 +77,11 @@ public class TerrainGenerator : MonoBehaviour
     Queue<ThreadedData<float[,]>> terrainDataQueue = new Queue<ThreadedData<float[,]>>();
     Queue<ThreadedData<Mesh>> meshDataQueue = new Queue<ThreadedData<Mesh>>();
 
+    //Benchmark Data
+    [Range(1, 1000)]
+    public int benchmarkIterations = 1000;
+    public GameObject performanceTracker;
+
     // Initializes the scene by deactivating the "NoisePlane" and "EditorMesh" GameObjects if they exist.
     private void Start()
     {
@@ -90,12 +96,12 @@ public class TerrainGenerator : MonoBehaviour
             }
             else
             {
-                Debug.Log("GameObject 'NoisePlane' is already inactive.");
+                UnityEngine.Debug.Log("GameObject 'NoisePlane' is already inactive.");
             }
         }
         else
         {
-            Debug.LogWarning("GameObject 'NoisePlane' not found in the scene.");
+            UnityEngine.Debug.LogWarning("GameObject 'NoisePlane' not found in the scene.");
         }
 
         if (editorMesh != null)
@@ -106,12 +112,20 @@ public class TerrainGenerator : MonoBehaviour
             }
             else
             {
-                Debug.Log("GameObject 'EditorMesh' is already inactive.");
+                UnityEngine.Debug.Log("GameObject 'EditorMesh' is already inactive.");
             }
         }
         else
         {
-            Debug.LogWarning("GameObject 'EditorMesh' not found in the scene.");
+            UnityEngine.Debug.LogWarning("GameObject 'EditorMesh' not found in the scene.");
+        }
+        if (!performanceTracker.activeSelf)
+        {
+            performanceTracker.SetActive(true);
+        }
+        else
+        {
+            UnityEngine.Debug.Log("GameObject 'PerformanceTracker' is already active.");
         }
     }
 
@@ -232,6 +246,28 @@ public class TerrainGenerator : MonoBehaviour
     private void OnValidate()
     {
         falloffMap = MapFalloff.GenerateFalloff(terrainSize, falloffSteepness, falloffShift);
+    }
+
+    public void BenchmarkGenerationTechniques()
+    {
+        UnityEngine.Debug.Log("Starting benchmark for terrain generation techniques...");
+
+        foreach (NoiseType noise in Enum.GetValues(typeof(NoiseType)))
+        {
+            noiseType = noise; // Set the current noise type
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            //tests 100 times and gets the average time
+            for (int i = 0; i < benchmarkIterations; i++)
+            {
+                GenerateTerrain(Vector2.zero);
+            }
+
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"{noiseType} generation took {stopwatch.ElapsedMilliseconds/benchmarkIterations} ms on average");
+        }
+
+        UnityEngine.Debug.Log("Benchmark completed.");
     }
 
 #endif

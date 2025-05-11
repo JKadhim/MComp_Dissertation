@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
@@ -15,6 +17,8 @@ public class ProceduralTerrain : MonoBehaviour
     public LevelOfDetailData[] detailLevels;
     public Transform viewer;
     public Material mapMaterial;
+    [Range(1, 1000)]
+    public int benchmarkIterations = 10;
 
     // Static Fields
     public static Vector2 viewerPosition;
@@ -24,6 +28,7 @@ public class ProceduralTerrain : MonoBehaviour
     Vector2 lastViewerPosition;
     int tileSize;
     int visibleTiles;
+    bool benchmarkCompleted = false; // Flag to check if the benchmark is completed
 
     Dictionary<Vector2, TerrainTile> tileDict = new Dictionary<Vector2, TerrainTile>(); // Dictionary to store terrain tiles
     static List<TerrainTile> priorTilesVisible = new List<TerrainTile>();
@@ -44,11 +49,16 @@ public class ProceduralTerrain : MonoBehaviour
 
         // Update visible tiles at the start
         UpdateVisibleTiles();
+
+        // Benchmark the terrain generation
+        //StartCoroutine(BenchmarkTerrainGenerationCoroutine(benchmarkIterations, 0.0f));
     }
 
     // Updates the viewer's position and checks if the visible tiles need to be updated.
     void Update()
     {
+        //if (!benchmarkCompleted) return; // Skip update if benchmark is completed
+
         var pos = viewer.position / scale;
         viewerPosition = new Vector2(pos.x, pos.z);
 
@@ -57,6 +67,52 @@ public class ProceduralTerrain : MonoBehaviour
         {
             lastViewerPosition = viewerPosition;
             UpdateVisibleTiles();
+        }
+    }
+
+    IEnumerator BenchmarkTerrainGenerationCoroutine(int iterations, float waitTime)
+    {
+        UnityEngine.Debug.Log($"Starting terrain generation benchmark for {iterations} iterations...");
+
+        long totalMilliseconds = 0;
+
+        for (int i = 0; i < iterations; i++)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            // Update visible tiles (this triggers terrain generation)
+            UpdateVisibleTiles();
+
+            stopwatch.Stop();
+            totalMilliseconds += stopwatch.ElapsedMilliseconds;
+
+            UnityEngine.Debug.Log($"Iteration {i + 1}: {stopwatch.ElapsedMilliseconds} ms");
+
+            DeleteAllTerrainTiles();
+            priorTilesVisible.Clear(); // Clear the list of visible tiles for the next iteration
+            tileDict.Clear(); // Clear the tile dictionary for the next iteration
+            //DeleteAllTerrainTiles(); // Delete all terrain tiles to avoid clutter
+
+            // Wait for the specified time before the next iteration
+            yield return new WaitForSeconds(waitTime);
+        }
+
+        float averageMilliseconds = totalMilliseconds / (float)iterations;
+        UnityEngine.Debug.Log($"Average terrain generation time over {iterations} iterations: {averageMilliseconds} ms");
+        UpdateVisibleTiles(); // Update visible tiles after the benchmark
+        benchmarkCompleted = true; // Set the benchmark completed flag to true
+    }
+
+    void DeleteAllTerrainTiles()
+    {
+        GameObject[] terrainTiles = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (GameObject tile in terrainTiles)
+        {
+            if (tile.name == "Terrain Mesh")
+            {
+                GameObject.Destroy(tile);
+            }
         }
     }
 
@@ -146,6 +202,12 @@ public class ProceduralTerrain : MonoBehaviour
         // Callback for when map data is received. Generates a texture and updates the tile.
         void onMapDataReceived(float[,] mapInfo)
         {
+            if (meshRenderer == null)
+            {
+                UnityEngine.Debug.LogWarning("MeshRenderer has been destroyed. Skipping map data processing.");
+                return;
+            }
+
             this.heightMap = mapInfo;
             mapReceived = true;
 
