@@ -48,16 +48,16 @@ public class ProceduralTerrain : MonoBehaviour
         visibleTiles = Mathf.RoundToInt(maxViewDistance / tileSize);
 
         // Update visible tiles at the start
-        //UpdateVisibleTiles();
+        UpdateVisibleTiles();
 
         // Benchmark the terrain generation
-        StartCoroutine(BenchmarkTerrainGenerationCoroutine(benchmarkIterations, 0.1f));
+        //StartCoroutine(BenchmarkTerrainGenerationCoroutine(benchmarkIterations, 0.0f));
     }
 
     // Updates the viewer's position and checks if the visible tiles need to be updated.
     void Update()
     {
-        if (!benchmarkCompleted) return; // Skip update if benchmark is completed
+        //if (!benchmarkCompleted) return; // Skip update if benchmark is completed
 
         var pos = viewer.position / scale;
         viewerPosition = new Vector2(pos.x, pos.z);

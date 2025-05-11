@@ -45,6 +45,7 @@ public class TerrainGenEditor : Editor
 
     //Benchmark properties
     SerializedProperty benchmarkIterations;
+    SerializedProperty performanceTracker;
 
     private void OnEnable()
     {
@@ -84,6 +85,7 @@ public class TerrainGenEditor : Editor
 
         //Benchmark properties
         benchmarkIterations = serializedObject.FindProperty("benchmarkIterations");
+        performanceTracker = serializedObject.FindProperty("performanceTracker");
     }
 
     public override void OnInspectorGUI()
@@ -109,6 +111,8 @@ public class TerrainGenEditor : Editor
             TerrainGenerator terrainGenerator = (TerrainGenerator)target;
             terrainGenerator.BenchmarkGenerationTechniques();
         }
+
+        EditorGUILayout.PropertyField(performanceTracker, new GUIContent("Performance Tracker"));
 
         // Apply changes to the serialized object
         serializedObject.ApplyModifiedProperties();

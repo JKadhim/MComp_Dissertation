@@ -80,6 +80,7 @@ public class TerrainGenerator : MonoBehaviour
     //Benchmark Data
     [Range(1, 1000)]
     public int benchmarkIterations = 1000;
+    public GameObject performanceTracker;
 
     // Initializes the scene by deactivating the "NoisePlane" and "EditorMesh" GameObjects if they exist.
     private void Start()
@@ -117,6 +118,14 @@ public class TerrainGenerator : MonoBehaviour
         else
         {
             UnityEngine.Debug.LogWarning("GameObject 'EditorMesh' not found in the scene.");
+        }
+        if (!performanceTracker.activeSelf)
+        {
+            performanceTracker.SetActive(true);
+        }
+        else
+        {
+            UnityEngine.Debug.Log("GameObject 'PerformanceTracker' is already active.");
         }
     }
 
