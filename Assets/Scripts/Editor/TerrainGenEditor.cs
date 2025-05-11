@@ -43,6 +43,9 @@ public class TerrainGenEditor : Editor
     SerializedProperty editorLevelOfDetail;
     SerializedProperty normalizationMode;
 
+    //Benchmark properties
+    SerializedProperty benchmarkIterations;
+
     private void OnEnable()
     {
         // General properties
@@ -78,6 +81,9 @@ public class TerrainGenEditor : Editor
         terrainHeightCurve = serializedObject.FindProperty("terrainHeightCurve");
         editorLevelOfDetail = serializedObject.FindProperty("editorLevelOfDetail");
         normalizationMode = serializedObject.FindProperty("normalizationMode");
+
+        //Benchmark properties
+        benchmarkIterations = serializedObject.FindProperty("benchmarkIterations");
     }
 
     public override void OnInspectorGUI()
@@ -94,6 +100,14 @@ public class TerrainGenEditor : Editor
         {
             TerrainGenerator terrainGenerator = (TerrainGenerator)target;
             terrainGenerator.GenerateTerrainInEditor();
+        }
+
+        EditorGUILayout.PropertyField(benchmarkIterations, new GUIContent("Benchmark Iterations"));
+
+        if (GUILayout.Button("Benchmark"))
+        {
+            TerrainGenerator terrainGenerator = (TerrainGenerator)target;
+            terrainGenerator.BenchmarkGenerationTechniques();
         }
 
         // Apply changes to the serialized object
