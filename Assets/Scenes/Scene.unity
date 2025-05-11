@@ -707,7 +707,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1406425091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -935,6 +935,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   detailLevels:
   - lOD: 1
+    range: 400
+  - lOD: 2
+    range: 800
+  - lOD: 3
+    range: 1200
+  - lOD: 4
+    range: 1600
+  - lOD: 5
+    range: 2000
+  - lOD: 6
     range: 2400
   viewer: {fileID: 260637164}
   mapMaterial: {fileID: 2100000, guid: 27d94538c4c08de479be95098b0d923c, type: 2}

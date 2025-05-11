@@ -15,6 +15,10 @@ public class PerformanceTracking : MonoBehaviour
 
     private bool isTracking = false; // Flag to control when FPS tracking starts
 
+    // Cumulative values for lifetime average FPS
+    private int totalFrameCount = 0;
+    private float totalElapsedTime = 0f;
+
     private void Start()
     {
         // Start the coroutine to delay FPS tracking
@@ -28,9 +32,13 @@ public class PerformanceTracking : MonoBehaviour
         frameCount++;
         elapsedTime += Time.deltaTime;
 
+        // Update cumulative values
+        totalFrameCount++;
+        totalElapsedTime += Time.deltaTime;
+
         if (elapsedTime >= updateInterval)
         {
-            // Calculate average FPS
+            // Calculate average FPS for the current interval
             float fps = frameCount / elapsedTime;
 
             // Update min and max FPS
@@ -43,13 +51,16 @@ public class PerformanceTracking : MonoBehaviour
                 maxFps = fps;
             }
 
+            // Calculate lifetime average FPS
+            float lifetimeAverageFps = totalFrameCount / totalElapsedTime;
+
             // Update the TextMeshProUGUI element
             if (fpsDisplay != null)
             {
-                fpsDisplay.text = $"AVG FPS: {fps:F2}";
+                fpsDisplay.text = $"AVG FPS: {lifetimeAverageFps:F0}";
             }
 
-            // Reset counters
+            // Reset interval counters
             frameCount = 0;
             elapsedTime = 0f;
         }
@@ -57,8 +68,9 @@ public class PerformanceTracking : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        // Code to execute when the application is quitting
-        Debug.Log($"Application is quitting. Min FPS: {minFps:F2}, Max FPS: {maxFps:F2}");
+        // Log min, max, and lifetime average FPS
+        float lifetimeAverageFps = totalFrameCount / totalElapsedTime;
+        Debug.Log($"Application is quitting. Min FPS: {minFps:F0}, Max FPS: {maxFps:F0}, Lifetime AVG FPS: {lifetimeAverageFps:F0}");
     }
 
     private System.Collections.IEnumerator DelayStartTracking()
