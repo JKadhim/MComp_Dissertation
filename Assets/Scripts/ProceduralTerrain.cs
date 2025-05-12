@@ -212,7 +212,7 @@ public class ProceduralTerrain : MonoBehaviour
             mapReceived = true;
 
             // Generate texture from heightmap and apply it to the material
-            Texture2D texture = TextureGenerator.TextureFromHeightMap(mapInfo);
+            Texture2D texture = TextureGenerator.TextureFromNoiseMap(mapInfo);
             meshRenderer.material.mainTexture = texture;
 
             UpdateTile();

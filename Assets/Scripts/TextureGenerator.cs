@@ -18,7 +18,7 @@ public static class TextureGenerator
     }
 
     // Creates a texture from a height map by converting height values to grayscale colors.
-    public static Texture2D TextureFromHeightMap(float[,] elevationMap)
+    public static Texture2D TextureFromNoiseMap(float[,] elevationMap)
     {
         int mapWidth = elevationMap.GetLength(0);
         int mapHeight = elevationMap.GetLength(1);

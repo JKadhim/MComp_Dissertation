@@ -163,7 +163,7 @@ public class TerrainGenerator : MonoBehaviour
         switch (renderMode)
         {
             case RenderMode.HeightMap:
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(terrainMap));
+                display.DrawTexture(TextureGenerator.TextureFromNoiseMap(terrainMap));
                 break;
             case RenderMode.TerrainMesh:
                 display.DrawMesh(TerrainMeshGenerator.GenerateTerrainMesh(terrainMap, terrainHeightMultiplier, terrainHeightCurve, editorLevelOfDetail, noiseType));
