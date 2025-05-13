@@ -758,7 +758,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 1
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 260637163}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -946,7 +946,7 @@ MonoBehaviour:
     range: 2000
   - lOD: 6
     range: 2400
-  viewer: {fileID: 260637164}
+  cameraTransform: {fileID: 260637164}
   mapMaterial: {fileID: 2100000, guid: 27d94538c4c08de479be95098b0d923c, type: 2}
   benchmarkIterations: 100
 --- !u!1 &1864524167
