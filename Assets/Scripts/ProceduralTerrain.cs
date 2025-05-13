@@ -15,17 +15,17 @@ public class ProceduralTerrain : MonoBehaviour
     // Public Fields
     public static float maxViewDistance;
     public LevelOfDetailData[] detailLevels;
-    public Transform viewer;
+    public Transform cameraTransform;
     public Material mapMaterial;
     [Range(1, 1000)]
     public int benchmarkIterations = 10;
 
     // Static Fields
-    public static Vector2 viewerPosition;
+    public static Vector2 cameraPosition;
     static TerrainGenerator terrainGenerator; 
 
     // Private Fields
-    Vector2 lastViewerPosition;
+    Vector2 lastCameraPosition;
     int tileSize;
     int visibleTiles;
     bool benchmarkCompleted = false; // Flag to check if the benchmark is completed
@@ -54,18 +54,18 @@ public class ProceduralTerrain : MonoBehaviour
         //StartCoroutine(BenchmarkTerrainGenerationCoroutine(benchmarkIterations, 0.0f));
     }
 
-    // Updates the viewer's position and checks if the visible tiles need to be updated.
+    // Updates the cameraTransform's position and checks if the visible tiles need to be updated.
     void Update()
     {
         //if (!benchmarkCompleted) return; // Skip update if benchmark is completed
 
-        var pos = viewer.position / scale;
-        viewerPosition = new Vector2(pos.x, pos.z);
+        var pos = cameraTransform.position / scale;
+        cameraPosition = new Vector2(pos.x, pos.z);
 
-        // Update tiles only if the viewer has moved a significant distance
-        if ((lastViewerPosition - viewerPosition).sqrMagnitude > updateDistanceSqr)
+        // Update tiles only if the cameraTransform has moved a significant distance
+        if ((lastCameraPosition - cameraPosition).sqrMagnitude > updateDistanceSqr)
         {
-            lastViewerPosition = viewerPosition;
+            lastCameraPosition = cameraPosition;
             UpdateVisibleTiles();
         }
     }
@@ -116,7 +116,7 @@ public class ProceduralTerrain : MonoBehaviour
         }
     }
 
-    // Updates the visibility of terrain tiles based on the viewer's position.
+    // Updates the visibility of terrain tiles based on the cameraTransform's position.
     void UpdateVisibleTiles()
     {
         // Hide all tiles from the last update
@@ -128,8 +128,8 @@ public class ProceduralTerrain : MonoBehaviour
         priorTilesVisible.Clear();
 
         // Calculate the current tile coordinates
-        int currentTilePosX = Mathf.RoundToInt(viewerPosition.x / tileSize);
-        int currentTilePosY = Mathf.RoundToInt(viewerPosition.y / tileSize);
+        int currentTilePosX = Mathf.RoundToInt(cameraPosition.x / tileSize);
+        int currentTilePosY = Mathf.RoundToInt(cameraPosition.y / tileSize);
 
         // Loop through visible chunks and update or create them
         for (int yOffset = -visibleTiles; yOffset <= visibleTiles; yOffset++)
@@ -212,19 +212,19 @@ public class ProceduralTerrain : MonoBehaviour
             mapReceived = true;
 
             // Generate texture from heightmap and apply it to the material
-            Texture2D texture = TextureGenerator.TextureFromHeightMap(mapInfo);
+            Texture2D texture = TextureGenerator.TextureFromNoiseMap(mapInfo);
             meshRenderer.material.mainTexture = texture;
 
             UpdateTile();
         }
 
-        // Updates the tile's visibility and LOD based on the viewer's position.
+        // Updates the tile's visibility and LOD based on the cameraTransform's position.
         public void UpdateTile()
         {
             if (!mapReceived) return;
 
-            // Calculate distance from the viewer to the tile
-            float distFromEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
+            // Calculate distance from the cameraTransform to the tile
+            float distFromEdge = Mathf.Sqrt(bounds.SqrDistance(cameraPosition));
             bool visible = distFromEdge <= maxViewDistance;
 
             if (visible)

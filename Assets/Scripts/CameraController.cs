@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float movementSpeed = 50f; // Speed of camera movement
-    public float lookSpeed = 2f;     // Speed of camera rotation
+    public float movementSpeed = 50f; // Speed of cameraTransform movement
+    public float lookSpeed = 2f;     // Speed of cameraTransform rotation
     public float sprintSpeed = 2f;      // Speed multiplier for sprinting
 
     private void Start()

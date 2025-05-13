@@ -19,7 +19,7 @@ public static class PerlinNoise
         Vector2 mapOffset,
         NormalizationMode normalizationMode)
     {
-        float[,] heightMap = new float[mapSize, mapSize];
+        float[,] noiseMap = new float[mapSize, mapSize];
 
         System.Random randomGenerator = new System.Random(randomSeed);
         Vector2[] octaveShifts = new Vector2[numOctaves];
@@ -63,13 +63,13 @@ public static class PerlinNoise
                     totalNoiseValue += perlinValue * amplitudes[octave];
                 }
 
-                lock (heightMap)
+                lock (noiseMap)
                 {
                     if (totalNoiseValue > highestNoiseValue) highestNoiseValue = totalNoiseValue;
                     if (totalNoiseValue < lowestNoiseValue) lowestNoiseValue = totalNoiseValue;
                 }
 
-                heightMap[col, row] = totalNoiseValue;
+                noiseMap[col, row] = totalNoiseValue;
             }
         });
 
@@ -80,16 +80,16 @@ public static class PerlinNoise
             {
                 if (normalizationMode == NormalizationMode.Local)
                 {
-                    heightMap[col, row] = Mathf.InverseLerp(lowestNoiseValue, highestNoiseValue, heightMap[col, row]);
+                    noiseMap[col, row] = Mathf.InverseLerp(lowestNoiseValue, highestNoiseValue, noiseMap[col, row]);
                 }
                 else
                 {
-                    float normalizedValue = (heightMap[col, row] + 1) / (2f * maxPossibleHeight / 1.75f);
-                    heightMap[col, row] = Mathf.Clamp(normalizedValue, 0, 1);
+                    float normalizedValue = (noiseMap[col, row] + 1) / (2f * maxPossibleHeight / 1.75f);
+                    noiseMap[col, row] = Mathf.Clamp(normalizedValue, 0, 1);
                 }
             }
         });
 
-        return heightMap;
+        return noiseMap;
     }
 }
